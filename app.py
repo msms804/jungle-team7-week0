@@ -156,9 +156,9 @@ def main():
     
     category = request.args.get("category", "전체")  # 기본값 "전체"
     categories = ["전체", "치킨", "한식", "카페/디저트", "중식", "버거/샌드위치", "분식", "회/초밥", "일식/돈가스", "기타"]
-    query = {} if category == "all" else {"category": category}
+    query = {} if category == "전체" else {"category": category}
 
-    restaurants = list(restaurants_collection.find({}, {"_id": 0}))  # ObjectId 제거
+    restaurants = list(restaurants_collection.find(query, {"_id": 0}))  # ObjectId 제거
 
     return render_template("main.html", restaurants=restaurants, selected_category=category, categories=categories)
 
