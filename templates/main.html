@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- tailwind -->
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <!-- JS -->
+    <script
+      src="https://code.jquery.com/jquery-3.5.1.min.js"
+      integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+      integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+      crossorigin="anonymous"
+    ></script>
+    <title>일요일에 뭐먹지</title>
+    <script>
+      const Sort = {
+        BY_ALL: "all",
+        BY_CHICKEN: "chicken",
+        BY_KOREAN: "korean",
+        BY_CAFE: "cafe",
+        BY_CHINESE: "chinese",
+        BY_BUGER: "buger",
+        BY_BUNSIK: "bunsik",
+        BY_SUSHI: "sushi",
+        BY_JAPANESE: "japanese",
+        BY_ETC: "etc",
+      };
+      let sortMode = Sort.BY_ALL;
+
+      $(document).ready(function () {
+        showCards();
+
+        displaySorter();
+      });
+
+      function showCards() {
+        $("#card-list").empty();
+
+        //서버에서 get 해야
+
+        //임시로
+        makeCard();
+      }
+
+      function makeCard() {
+        for (let i = 0; i < 5; i++) {
+          let temp_html = `
+                     <div id="card-${i}" class="w-96 h-48 flex border-1 border-gray-200 rounded-lg overflow-hidden ">
+                <div class="bg-gray-200 w-1/3">이미지</div>
+                <div class="w-2/3 ml-4">
+                    <div class="h-40 space-y-3">
+                        <div>카드1</div>
+                        <div class="text-sm">{{주소}}</div>
+                        <div class="text-gray-500 text-sm"># 브런치</div>
+                        <div class="flex space-x-2 text-xs text-gray-500">
+                            <div class="border-1 border-solid border-gray-500 rounded-full p-1">{{메뉴1}}</div>
+                            <div class="border-1 border-solid border-gray-500 rounded-full p-1">메뉴2</div>
+                            <div class="border-1 border-solid border-gray-500 rounded-full p-1">메뉴3</div>
+                        </div>
+                    </div>
+                    <div class="flex flex-row space-x-8 mt-auto justify-center text-sm text-white">
+                        <div class="border-1 rounded-lg border-blue-500 bg-blue-500 p-1">좋아요 23</div>
+                        <div class="border-1 rounded-lg border-red-500 bg-red-500 p-1" onclick="showMenuCard('${i}')">메뉴 추천</div>
+                    </div>
+                </div>
+            </div>
+                `;
+          $("#card-list").append(temp_html);
+        }
+      }
+      function showMenuCard(id) {
+        $(`#card-${id}`).empty();
+
+        let temp_html = `
+                 <div id="card-menu"
+                class="w-96 h-48 flex flex-col border-1 border-gray-200  shadow-lg rounded-lg overflow-hidden ">
+                <div class="h-40 flex flex-col justify-center space-y-2 items-center">
+                    <div class="flex flex-col">
+                        <div>
+                            <div class="mt-2">
+                                <div
+                                    class="flex items-center rounded-md bg-white pl-3 outline-1 -outline-offset-1 outline-gray-300 has-[input:focus-within]:outline-2 has-[input:focus-within]:-outline-offset-2 has-[input:focus-within]:outline-indigo-600">
+                                    <input type="text" name="price" id="price"
+                                        class="block min-w-0 grow py-1.5 pr-3 pl-1 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none sm:text-sm/6"
+                                        placeholder="">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-xs text-red-500 ">추천메뉴를 입력해 주세요</div>
+                    </div>
+
+
+                </div>
+                <div class="flex space-x-8 mt-auto mb-3 justify-center text-sm text-white">
+                    <div class="border rounded-lg border-blue-500 bg-blue-500 p-2" onclick="reloadPage()">확인</div>
+                    <div class="border rounded-lg border-red-500 bg-red-500 p-2" onclick="reloadPage()">취소</div>
+                </div>
+
+            </div>
+            `;
+        $(`#card-${id}`).append(temp_html);
+      }
+
+      function reloadPage() {
+        location.reload();
+      }
+      document.addEventListener("DOMContentLoaded", () => {
+        const modal = document.getElementById("modal");
+        const openModalBtn = document.getElementById("open-modal");
+        const closeModalBtn = document.getElementById("close-modal");
+
+        // 모달 열기
+        openModalBtn.addEventListener("click", () => {
+          modal.classList.remove("hidden");
+        });
+
+        // 모달 닫기 (취소 버튼)
+        closeModalBtn.addEventListener("click", () => {
+          modal.classList.add("hidden");
+        });
+
+        // 모달 바깥 영역 클릭 시 닫기
+        modal.addEventListener("click", (event) => {
+          if (event.target === modal) {
+            modal.classList.add("hidden");
+          }
+        });
+      });
+      function changeSorter(newMode) {
+        if (sortMode === newMode) {
+          return;
+        }
+        sortMode = newMode;
+        displaySorter();
+
+        //화면 다시 보여주기
+        showCards();
+      }
+      function displaySorter() {
+        // 모든 항목에서 active 클래스를 제거하고 회색으로 변경
+        document.querySelectorAll("li").forEach((item) => {
+          item.classList.remove("active");
+          item.classList.add("text-gray-500"); // 비활성화된 항목은 회색
+        });
+
+        // 선택된 항목만 검정색으로 변경하고 active 클래스 추가
+        if (sortMode === "all") {
+          document.getElementById("all").classList.add("active");
+          document.getElementById("all").classList.remove("text-gray-500");
+        } else if (sortMode === "chicken") {
+          document.getElementById("chicken").classList.add("active");
+          document.getElementById("chicken").classList.remove("text-gray-500");
+        } else if (sortMode === "korean") {
+          document.getElementById("korean").classList.add("active");
+          document.getElementById("korean").classList.remove("text-gray-500");
+        } else if (sortMode === "cafe") {
+          document.getElementById("cafe").classList.add("active");
+          document.getElementById("cafe").classList.remove("text-gray-500");
+        } else if (sortMode === "chinese") {
+          document.getElementById("chinese").classList.add("active");
+          document.getElementById("chinese").classList.remove("text-gray-500");
+        } else if (sortMode === "burger") {
+          document.getElementById("burger").classList.add("active");
+          document.getElementById("burger").classList.remove("text-gray-500");
+        } else if (sortMode === "bunsik") {
+          document.getElementById("bunsik").classList.add("active");
+          document.getElementById("bunsik").classList.remove("text-gray-500");
+        } else if (sortMode === "sushi") {
+          document.getElementById("sushi").classList.add("active");
+          document.getElementById("sushi").classList.remove("text-gray-500");
+        } else if (sortMode === "japanese") {
+          document.getElementById("japanese").classList.add("active");
+          document.getElementById("japanese").classList.remove("text-gray-500");
+        } else if (sortMode === "etc") {
+          document.getElementById("etc").classList.add("active");
+          document.getElementById("etc").classList.remove("text-gray-500");
+        }
+      }
+      // 카테고리 목록 토글
+      function toggleCategoryList() {
+        const categoryList = document.getElementById("category-list");
+        categoryList.classList.toggle("hidden");
+      }
+
+      // 카테고리 선택
+      function selectCategory(category) {
+        const menuButton = document.getElementById("menu-button");
+        menuButton.textContent = category;
+        toggleCategoryList(); // 선택 후 목록 숨기기
+      }
+    </script>
+  </head>
+
+  <body>
+    <header class="w-full text-center py-6 bg-white shadow-md">
+      <h1 class="text-2xl font-bold">일요일에 뭐 먹지?</h1>
+    </header>
+
+    <nav class="w-full bg-gray-200 py-3">
+      <ul class="flex justify-center space-x-6 text-gray-800 font-medium">
+        <li
+          class="cursor-pointer hover:text-gray-500"
+          id="all"
+          onclick="changeSorter('all')"
+        >
+          전체
+        </li>
+        <li
+          class="cursor-pointer hover:text-gray-500"
+          id="chicken"
+          onclick="changeSorter('chicken')"
+        >
+          치킨
+        </li>
+        <li
+          class="cursor-pointer hover:text-gray-500"
+          id="korean"
+          onclick="changeSorter('korean')"
+        >
+          한식
+        </li>
+        <li
+          class="cursor-pointer hover:text-gray-500"
+          id="cafe"
+          onclick="changeSorter('cafe')"
+        >
+          카페/디저트
+        </li>
+        <li
+          class="cursor-pointer hover:text-gray-500"
+          id="chinese"
+          onclick="changeSorter('chinese')"
+        >
+          중식
+        </li>
+        <li
+          class="cursor-pointer hover:text-gray-500"
+          id="burger"
+          onclick="changeSorter('burger')"
+        >
+          버거/샌드위치
+        </li>
+        <li
+          class="cursor-pointer hover:text-gray-500"
+          id="bunsik"
+          onclick="changeSorter('bunsik')"
+        >
+          분식
+        </li>
+        <li
+          class="cursor-pointer hover:text-gray-500"
+          id="sushi"
+          onclick="changeSorter('sushi')"
+        >
+          회/초밥
+        </li>
+        <li
+          class="cursor-pointer hover:text-gray-500"
+          id="japanese"
+          onclick="changeSorter('japanese')"
+        >
+          일식/돈가스
+        </li>
+        <li
+          class="cursor-pointer hover:text-gray-500"
+          id="etc"
+          onclick="changeSorter('etc')"
+        >
+          기타
+        </li>
+      </ul>
+    </nav>
+    <div class="mx-64 justify-center">
+      <div id="card-list" class="flex flex-wrap gap-8 p-4">
+        <div
+          id="card1"
+          class="w-96 h-48 flex border-1 border-gray-200 rounded-lg overflow-hidden"
+        >
+          <div class="bg-gray-200 w-1/3">이미지</div>
+          <div class="w-2/3 ml-4">
+            <div class="h-40 space-y-3">
+              <div>카드1</div>
+              <div class="text-sm">
+                경기 용인시 처인구 포곡읍 포곡로 239-7 신관건물 3층
+              </div>
+              <div class="text-gray-500 text-sm"># 브런치</div>
+              <div class="flex space-x-2 text-xs text-gray-500">
+                <div
+                  class="border-1 border-solid border-gray-500 rounded-full p-1"
+                >
+                  메뉴1
+                </div>
+                <div
+                  class="border-1 border-solid border-gray-500 rounded-full p-1"
+                >
+                  메뉴2
+                </div>
+                <div
+                  class="border-1 border-solid border-gray-500 rounded-full p-1"
+                >
+                  메뉴3
+                </div>
+              </div>
+            </div>
+            <div
+              class="flex flex-row space-x-8 mt-auto justify-center text-sm text-white"
+            >
+              <div class="border-1 rounded-lg border-blue-500 bg-blue-500 p-1">
+                좋아요 23
+              </div>
+              <div class="border-1 rounded-lg border-red-500 bg-red-500 p-1">
+                메뉴 추천
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          id="card2"
+          class="w-96 h-48 flex border-1 border-gray-200 shadow-lg rounded-lg overflow-hidden"
+        >
+          <div class="bg-gray-200 w-1/3">이미지</div>
+          <div class="w-2/3 ml-4">
+            <div class="h-40 space-y-3">
+              <div>카드2</div>
+              <div class="text-sm">
+                경기 용인시 처인구 포곡읍 포곡로 239-7 신관건물 3층
+              </div>
+              <div class="text-gray-500 text-sm"># 브런치</div>
+              <div class="flex space-x-2 text-xs text-gray-500">
+                <div
+                  class="border-1 border-solid border-gray-500 rounded-full p-1"
+                >
+                  메뉴1
+                </div>
+                <div
+                  class="border-1 border-solid border-gray-500 rounded-full p-1"
+                >
+                  메뉴2
+                </div>
+                <div
+                  class="border-1 border-solid border-gray-500 rounded-full p-1"
+                >
+                  메뉴3
+                </div>
+              </div>
+            </div>
+            <div
+              class="flex flex-row space-x-8 mt-auto justify-center text-sm text-white"
+            >
+              <div class="border-1 rounded-lg border-blue-500 bg-blue-500 p-1">
+                좋아요 23
+              </div>
+              <div class="border-1 rounded-lg border-red-500 bg-red-500 p-1">
+                메뉴 추천
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          id="card3"
+          class="w-96 h-48 flex border-1 border-gray-200 shadow-lg rounded-lg overflow-hidden"
+        >
+          <div class="bg-gray-200 w-1/3">이미지</div>
+          <div class="w-2/3 ml-4">
+            <div class="h-40 space-y-3">
+              <div>카드3</div>
+              <div class="text-sm">
+                경기 용인시 처인구 포곡읍 포곡로 239-7 신관건물 3층
+              </div>
+              <div class="text-gray-500 text-sm"># 브런치</div>
+              <div class="flex space-x-2 text-xs text-gray-500">
+                <div
+                  class="border-1 border-solid border-gray-500 rounded-full p-1"
+                >
+                  메뉴1
+                </div>
+                <div
+                  class="border-1 border-solid border-gray-500 rounded-full p-1"
+                >
+                  메뉴2
+                </div>
+                <div
+                  class="border-1 border-solid border-gray-500 rounded-full p-1"
+                >
+                  메뉴3
+                </div>
+              </div>
+            </div>
+            <div
+              class="flex flex-row space-x-8 mt-auto justify-center text-sm text-white"
+            >
+              <div class="border-1 rounded-lg border-blue-500 bg-blue-500 p-1">
+                좋아요 23
+              </div>
+              <div class="border-1 rounded-lg border-red-500 bg-red-500 p-1">
+                메뉴 추천
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 메뉴추천 카드 -->
+        <div
+          id="card-menu"
+          class="w-96 h-48 flex flex-col border-1 border-gray-200 shadow-lg rounded-lg overflow-hidden"
+        >
+          <div class="h-40 flex flex-col justify-center space-y-2 items-center">
+            <div class="flex flex-col">
+              <div>
+                <div class="mt-2">
+                  <div
+                    class="flex items-center rounded-md bg-white pl-3 outline-1 -outline-offset-1 outline-gray-300 has-[input:focus-within]:outline-2 has-[input:focus-within]:-outline-offset-2 has-[input:focus-within]:outline-indigo-600"
+                  >
+                    <input
+                      type="text"
+                      name="price"
+                      id="price"
+                      class="block min-w-0 grow py-1.5 pr-3 pl-1 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none sm:text-sm/6"
+                      placeholder=""
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="text-xs text-red-500">추천메뉴를 입력해 주세요</div>
+            </div>
+          </div>
+          <div
+            class="flex space-x-8 mt-auto mb-3 justify-center text-sm text-white"
+          >
+            <div class="border-1 rounded-lg border-blue-500 bg-blue-500 p-2">
+              확인
+            </div>
+            <div class="border-1 rounded-lg border-red-500 bg-red-500 p-2">
+              취소
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="open-modal" class="relative">
+        <button
+          class="fixed bottom-8 right-8 bg-blue-500 text-white p-4 rounded-full shadow-lg hover:bg-blue-600 transition-colors"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="size-6"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 4.5v15m7.5-7.5h-15"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div
+        id="modal"
+        class="fixed inset-0 bg-black/30 flex justify-center items-center hidden"
+      >
+        <div
+          id="naver-link"
+          class="w-96 h-48 flex flex-col border border-gray-200 shadow-lg rounded-lg bg-white p-4"
+        >
+          <div class="h-40 flex flex-col justify-center space-y-2 items-center">
+            <div class="relative inline-block text-left">
+              <button
+                type="button"
+                class="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50"
+                id="menu-button"
+                onclick="toggleCategoryList()"
+              >
+                카테고리를 선택해주세요
+              </button>
+              <!-- 카테고리 목록 (숨겨져 있음) -->
+              <div
+                id="category-list"
+                class="absolute w-full mt-2 bg-white shadow-lg rounded-md max-h-40 overflow-y-auto hidden"
+              >
+                <ul class="py-1 text-sm text-gray-700">
+                  <li>
+                    <button
+                      class="block w-full text-left px-4 py-2"
+                      onclick="selectCategory('전체')"
+                    >
+                      전체
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      class="block w-full text-left px-4 py-2"
+                      onclick="selectCategory('한식')"
+                    >
+                      한식
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      class="block w-full text-left px-4 py-2"
+                      onclick="selectCategory('카페/디저트')"
+                    >
+                      카페/디저트
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      class="block w-full text-left px-4 py-2"
+                      onclick="selectCategory('중식')"
+                    >
+                      중식
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      class="block w-full text-left px-4 py-2"
+                      onclick="selectCategory('버거/샌드위치')"
+                    >
+                      버거/샌드위치
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      class="block w-full text-left px-4 py-2"
+                      onclick="selectCategory('분식')"
+                    >
+                      분식
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      class="block w-full text-left px-4 py-2"
+                      onclick="selectCategory('회/초밥')"
+                    >
+                      회/초밥
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      class="block w-full text-left px-4 py-2"
+                      onclick="selectCategory('일식/돈가스')"
+                    >
+                      일식/돈가스
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      class="block w-full text-left px-4 py-2"
+                      onclick="selectCategory('기타')"
+                    >
+                      기타
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="flex flex-col">
+              <input
+                type="text"
+                id="price"
+                class="block w-full py-1.5 px-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none border border-gray-300 rounded-md"
+                placeholder="네이버 지도 링크 입력"
+              />
+              <div class="text-xs text-red-500 mt-1">
+                네이버지도 > 공유 탭에 들어가서 링크를 복사 후 붙여넣기
+              </div>
+            </div>
+          </div>
+          <div
+            class="flex space-x-8 mt-auto mb-3 justify-center text-sm text-white"
+          >
+            <button
+              id="confirm"
+              class="border rounded-lg border-blue-500 bg-blue-500 px-4 py-2"
+            >
+              확인
+            </button>
+            <button
+              id="close-modal"
+              class="border rounded-lg border-red-500 bg-red-500 px-4 py-2"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
