@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% block title %}일요일에 뭐 먹지? - 회원가입{% endblock %}
+{% block title %}회원가입{% endblock %}
 {% block content %}
 
 <div class="w-full max-w-md mx-auto p-4">
@@ -9,31 +9,36 @@
     <form action="/signup" method="post">
       <!-- ID 입력 -->
       <div class="mb-4">
-        <label class="block mb-2 text-gray-700">ID를 입력해주세요.</label>
+        <label class="block mb-2 text-gray-700">이메일을 입력해주세요.</label>
         <input
-          type="text"
-          name="user_id"
-          value="{{ retain_id }}"
+          type="email"
+          name="email"
+          value="{{ retain_email }}"
           class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none"
           required
         />
       </div>
+      <!-- ✅ 교번 입력 (추가됨) -->
+      <div class="mb-4">
+        <label class="block mb-2 text-gray-700">교번을 입력해주세요.</label>
+        <input type="text" name="campnum" value="{{ retain_campnum }}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none" required/>
+      </div>
       <!-- PW 입력 -->
       <div class="mb-4">
-        <label class="block mb-2 text-gray-700">PW를 입력해주세요.</label>
+        <label class="block mb-2 text-gray-700">Password를 입력해주세요.</label>
         <input
           type="password"
-          name="user_pw"
+          name="password"
           class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none"
           required
         />
       </div>
       <!-- PW 확인 -->
       <div class="mb-4">
-        <label class="block mb-2 text-gray-700">PW를 다시 입력해주세요.</label>
+        <label class="block mb-2 text-gray-700">Password를 다시 입력해주세요.</label>
         <input
           type="password"
-          name="user_pw_confirm"
+          name="password_confirm"
           class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none"
           required
         />

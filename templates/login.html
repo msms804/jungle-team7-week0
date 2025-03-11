@@ -20,20 +20,14 @@
     <!-- ID, PW 입력 폼 -->
     <form action="/" method="post">
       <div class="mb-4">
-        <label class="block mb-2 text-gray-700">ID를 입력해주세요.</label>
-        <input
-          type="text"
-          name="user_id"
-          value="{{ retain_id }}"
-          class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none"
-          required
-        />
+        <label class="block mb-2 text-gray-700">이메일을 입력해주세요.</label>
+        <input type="email" name="email" value="{{ retain_email }}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none" required/>
       </div>
       <div class="mb-4">
-        <label class="block mb-2 text-gray-700">PW를 입력해주세요.</label>
+        <label class="block mb-2 text-gray-700">Password를 입력해주세요.</label>
         <input
           type="password"
-          name="user_pw"
+          name="password"
           class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none"
           required
         />

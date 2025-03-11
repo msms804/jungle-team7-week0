@@ -39,43 +39,43 @@ def login():
       3) 로그인 성공 => session 저장 후 main 페이지로 이동
     """
     if request.method == "POST":
-        user_id = request.form.get("user_id", "")
-        user_pw = request.form.get("user_pw", "")
+        email = request.form.get("email", "")
+        password = request.form.get("password", "")
 
-        # DB에서 해당 user_id 찾기
-        user_data = users_collection.find_one({"user_id": user_id})
+        # DB에서 해당 email 찾기
+        user_data = users_collection.find_one({"email": email})
 
         if not user_data:
             # ID가 존재하지 않을 때
             return """
             <script>
-              alert("ID가 없습니다. 회원가입 해주세요.");
+              alert("이메일이 존재하지 않습니다. 회원가입 해주세요.");
               window.location.href = "/";
             </script>
             """
         else:
             # ID가 존재 → PW 비교
-            if user_data.get("password") != user_pw:
+            if user_data.get("password") != password:
                 # PW 틀림
                 return f"""
                 <script>
-                  alert("PW가 틀립니다.");
-                  // ID는 유지하고 PW만 비워서 다시 로그인 페이지로
-                  window.location.href = "/?retain_id={user_id}";
+                  alert("비밀번호가 틀립니다.");
+                  window.location.href = "/?retain_email={email}";
                 </script>
                 """
             else:
                 # 로그인 성공
                 session.clear()
-                session.permanent = True  # 30분 타이머 적용
-                session["_id"] = str(user_data.get("_id"))  # MongoDB _id(ObjectId)
-                session["user_id"] = user_id
+                session.permanent = True  
+                session["_id"] = str(user_data.get("_id"))  
+                session["email"] = email
+                session["campnum"] = user_data.get("campnum")  # 교번 세션 저장
                 return redirect(url_for("main"))
 
     else:
         # GET 요청 → 로그인 페이지 렌더링
-        retain_id = request.args.get("retain_id", "")
-        return render_template("login.html", retain_id=retain_id)
+        retain_email = request.args.get("retain_email", "")
+        return render_template("login.html", retain_email=retain_email)
 
 ##################################################
 # 2) 회원가입 페이지 - GET/POST
@@ -92,37 +92,49 @@ def signup():
       3) 성공 => DB에 저장 후 => alert("회원가입이 완료되었습니다!") => 로그인 페이지로
     """
     if request.method == "POST":
-        user_id = request.form.get("user_id", "")
-        user_pw = request.form.get("user_pw", "")
-        user_pw_confirm = request.form.get("user_pw_confirm", "")
+        email = request.form.get("email", "")
+        campnum = request.form.get("campnum", "")
+        password = request.form.get("password", "")
+        password_confirm = request.form.get("password_confirm", "")
 
         # 1) ID 중복 확인
-        existing_user = users_collection.find_one({"user_id": user_id})
+        existing_user = users_collection.find_one({"email": email})
         if existing_user:
             return f"""
             <script>
-              alert("이미 존재하는 ID입니다.");
-              window.location.href = "/signup?retain_id={user_id}";
+              alert("이미 존재하는 이메일입니다.");
+              window.location.href = "/signup?retain_email={email}";
+            </script>
+            """
+
+        # ✅ 교번 중복 체크 (고유한 번호이므로 중복 불가)
+        existing_campnum = users_collection.find_one({"campnum": campnum})
+        if existing_campnum:
+            return f"""
+            <script>
+              alert("이미 존재하는 교번입니다.");
+              window.location.href = "/signup?retain_email={email}&retain_campnum={campnum}";
             </script>
             """
 
         # 2) 비밀번호/확인 불일치
-        if user_pw != user_pw_confirm:
+        if password != password_confirm:
             return f"""
             <script>
               alert("비밀번호가 동일하지 않습니다.");
               // ID는 유지하고, PW만 빈칸으로
-              window.location.href = "/signup?retain_id={user_id}";
+              window.location.href = "/signup?retain_email={email}&retain_campnum={campnum}";
+
             </script>
             """
 
         # 위 조건을 통과하면 DB에 새 유저 정보 저장
         new_user = {
-            "user_id": user_id,
-            "password": user_pw
-            # 필요하다면 추가 정보(이메일, 닉네임 등)도 저장 가능
+            "email": email,
+            "campnum": campnum,
+            "password": password
         }
-        inserted_id = users_collection.insert_one(new_user).inserted_id
+        users_collection.insert_one(new_user)
 
         # 가입 완료 → 로그인 페이지로 리다이렉트
         # return """
@@ -136,8 +148,9 @@ def signup():
 
     else:
         # GET 요청 → 회원가입 페이지 렌더링
-        retain_id = request.args.get("retain_id", "")
-        return render_template("signup.html", retain_id=retain_id)
+        retain_email = request.args.get("retain_email", "")
+        retain_campnum = request.args.get("retain_campnum", "")
+        return render_template("signup.html", retain_email=retain_email, retain_campnum=retain_campnum)
 
 ##################################################
 # 3) 메인 페이지 (로그인 성공 후)
