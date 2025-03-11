@@ -1,0 +1,30 @@
+# 🛑 Python 가상환경 폴더 (venv) 제외
+.venv
+
+# 🛑 Python 캐시 파일 제거
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 🛑 환경설정 파일 (IDE 설정 파일 제외)
+.env
+*.env
+*.DS_Store
+
+# 🛑 Jupyter Notebook 체크포인트 제거 (필요할 경우)
+.ipynb_checkpoints/
+
+# 🛑 로그 파일 및 임시 파일 제외
+*.log
+*.sqlite3
+*.db
+
+# 🛑 VSCode 설정 파일 (필요하면 제외 가능)
+.vscode/
+
+# 🛑 MacOS 관련 파일 제외
+.DS_Store
+
+# 🛑 Git ignore rule for Windows
+Thumbs.db
