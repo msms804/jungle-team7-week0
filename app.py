@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from datetime import timedelta
+from bson import ObjectId  # ObjectId를 사용하기 위해 추가
+
 import pymongo
 from flask import redirect, url_for, flash
 
@@ -18,6 +20,9 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 client = pymongo.MongoClient("mongodb://localhost:27017/")
 db = client["sundaydb"]          # 데이터베이스 이름
 users_collection = db["users"]      # 유저 정보를 저장할 컬렉션
+restaurants_collection = db["restaurants"]  # 식당 정보 저장할 컬렉션
+
+
 
 ##################################################
 # 1) 첫 페이지(로그인 페이지) - GET/POST
@@ -137,7 +142,7 @@ def signup():
 ##################################################
 # 3) 메인 페이지 (로그인 성공 후)
 ##################################################
-@app.route("/main")
+@app.route("/list")
 def main():
     """
     로그인 성공 시 이동하는 메인 페이지
@@ -148,8 +153,14 @@ def main():
     if "_id" not in session:
         # 세션 만료 혹은 로그인 안 된 경우 → 로그인 화면으로
         return redirect(url_for("login"))
+    
+    category = request.args.get("category", "전체")  # 기본값 "전체"
+    categories = ["전체", "치킨", "한식", "카페/디저트", "중식", "버거/샌드위치", "분식", "회/초밥", "일식/돈가스", "기타"]
+    query = {} if category == "all" else {"category": category}
 
-    return render_template("main.html")
+    restaurants = list(restaurants_collection.find({}, {"_id": 0}))  # ObjectId 제거
+
+    return render_template("main.html", restaurants=restaurants, selected_category=category, categories=categories)
 
 ##################################################
 # 4) 로그아웃
@@ -162,9 +173,72 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
+
+# MOCKDATA 삽입
+test_data = [
+    {
+        "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d11"),
+        "name": "김밥천국",
+        "address": "서울특별시 강남구 테헤란로 123",
+        "category": "한식",
+        "naver_url": "https://map.naver.com/v5/entry/place/123456",
+        "likes": 120,
+        "description": "저렴하고 다양한 한식 메뉴를 제공하는 분식집",
+        "image_url": "https://example.com/images/kimbap.jpg"
+    },
+    {
+        "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d12"),
+        "name": "짜장명가",
+        "address": "서울특별시 마포구 양화로 456",
+        "category": "중식",
+        "naver_url": "https://map.naver.com/v5/entry/place/654321",
+        "likes": 200,
+        "description": "정통 짜장면과 탕수육이 인기 있는 중식당",
+        "image_url": "https://example.com/images/jajangmyeon.jpg"
+    },
+    {
+        "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d13"),
+        "name": "스시야",
+        "address": "부산광역시 해운대구 해운대로 789",
+        "category": "일식",
+        "naver_url": "https://map.naver.com/v5/entry/place/789123",
+        "likes": 300,
+        "description": "싱싱한 회와 스시를 제공하는 일본식 초밥 전문점",
+        "image_url": "https://example.com/images/sushi.jpg"
+    },
+    {
+        "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d14"),
+        "name": "미스터 피자",
+        "address": "대구광역시 중구 중앙대로 321",
+        "category": "양식",
+        "naver_url": "https://map.naver.com/v5/entry/place/321789",
+        "likes": 150,
+        "description": "다양한 토핑과 수제 도우가 특징인 피자 전문점",
+        "image_url": "https://example.com/images/pizza.jpg"
+    },
+    {
+        "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d15"),
+        "name": "육쌈냉면",
+        "address": "서울특별시 종로구 종로3가 12",
+        "category": "한식",
+        "naver_url": "https://map.naver.com/v5/entry/place/987654",
+        "likes": 180,
+        "description": "숯불 고기와 함께 먹는 냉면 전문점",
+        "image_url": "https://example.com/images/naengmyeon.jpg"
+    }
+]
+
+# MongoDB에 데이터 삽입 (중복 방지: 같은 restaurant_id가 있는 경우 삽입 안 함)
+for data in test_data:
+    if not restaurants_collection.find_one({"restaurant_id": data["restaurant_id"]}):
+        restaurants_collection.insert_one(data)
+
+
+
 ##################################################
 # Flask 실행
 ##################################################
 if __name__ == "__main__":
     app.run(debug=True)
+
                                                                                                                                                                                                                                                                                                                                                                    
