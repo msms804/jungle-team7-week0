@@ -57,9 +57,11 @@
               </div>
             </div>
             <div class="flex flex-row space-x-8 mt-auto justify-center text-sm text-white">
-              <div class="border rounded-lg border-blue-500 bg-blue-500 p-1">
-                좋아요 {{ restaurant.likes }}
-              </div>
+               <form method="POST" action="{{ url_for('like_restaurant', restaurant_id=restaurant.restaurant_id) }}">
+                <button type="submit" class="border rounded-lg border-blue-500 bg-blue-500 p-1">
+                  ❤️ 좋아요 <span>{{ restaurant.likes }}</span>
+                </button>
+              </form>
               <button class="border rounded-lg border-red-500 bg-red-500 p-1"
                 onclick="showMenuCard('{{ loop.index }}')">
                 메뉴 추천

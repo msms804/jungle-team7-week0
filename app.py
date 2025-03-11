@@ -186,8 +186,39 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
+##################################################
+# 5) 레스토랑 좋아요 기능
+##################################################
+@app.route("/like/<restaurant_id>", methods=["POST"])
+def like_restaurant(restaurant_id):
+    if "_id" not in session:
+        return redirect(url_for("login"))
+    
+    restaurant = restaurants_collection.find_one({"restaurant_id": ObjectId(restaurant_id)})
+    
+    if not restaurant:
+        return redirect(url_for("login"))
+    
+    # 좋아요 수만 증가
+    restaurants_collection.update_one(
+        {"restaurant_id": ObjectId(restaurant_id)},
+        {"$inc": {"likes": 1}}
+    )
+    
+    return redirect(url_for("main"))
 
+
+
+
+
+
+##################################################
 # MOCKDATA 삽입
+##################################################
+
+restaurants_collection.drop()  # 기존 컬렉션 삭제
+
+
 test_data = [
     {
         "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d11"),
@@ -197,7 +228,7 @@ test_data = [
         "naver_url": "https://map.naver.com/v5/entry/place/123456",
         "likes": 120,
         "description": "저렴하고 다양한 한식 메뉴를 제공하는 분식집",
-        "image_url": "https://example.com/images/kimbap.jpg"
+        "image_url": "https://example.com/images/kimbap.jpg",
     },
     {
         "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d12"),
@@ -207,7 +238,7 @@ test_data = [
         "naver_url": "https://map.naver.com/v5/entry/place/654321",
         "likes": 200,
         "description": "정통 짜장면과 탕수육이 인기 있는 중식당",
-        "image_url": "https://example.com/images/jajangmyeon.jpg"
+        "image_url": "https://example.com/images/jajangmyeon.jpg",
     },
     {
         "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d13"),
@@ -217,7 +248,7 @@ test_data = [
         "naver_url": "https://map.naver.com/v5/entry/place/789123",
         "likes": 300,
         "description": "싱싱한 회와 스시를 제공하는 일본식 초밥 전문점",
-        "image_url": "https://example.com/images/sushi.jpg"
+        "image_url": "https://example.com/images/sushi.jpg",
     },
     {
         "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d14"),
@@ -227,7 +258,7 @@ test_data = [
         "naver_url": "https://map.naver.com/v5/entry/place/321789",
         "likes": 150,
         "description": "다양한 토핑과 수제 도우가 특징인 피자 전문점",
-        "image_url": "https://example.com/images/pizza.jpg"
+        "image_url": "https://example.com/images/pizza.jpg",
     },
     {
         "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d15"),
@@ -237,7 +268,7 @@ test_data = [
         "naver_url": "https://map.naver.com/v5/entry/place/987654",
         "likes": 180,
         "description": "숯불 고기와 함께 먹는 냉면 전문점",
-        "image_url": "https://example.com/images/naengmyeon.jpg"
+        "image_url": "https://example.com/images/naengmyeon.jpg",
     }
 ]
 
@@ -247,11 +278,10 @@ for data in test_data:
         restaurants_collection.insert_one(data)
 
 
-
 ##################################################
 # Flask 실행
 ##################################################
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5001, debug=True)
 
                                                                                                                                                                                                                                                                                                                                                                    
