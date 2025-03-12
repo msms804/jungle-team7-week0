@@ -108,6 +108,10 @@
       toggleCategoryList();
     }
 
+  function openDirections(mapUrl) {
+    window.open(mapUrl, '_blank');  // '_blank'로 새 창에서 열기
+  }
+
     window.addEventListener('DOMContentLoaded', function () {
       // selectedCategory의 값 가져오기
       const selectedCategory = document.getElementById('selectedCategory').textContent.trim();
@@ -364,106 +368,15 @@
       <button id="confirm" class="border rounded-lg border-blue-500 bg-blue-500 px-4 py-2">
         확인
       </button>
-      <button id="close-modal" class="border rounded-lg border-red-500 bg-red-500 px-4 py-2">
+      <button id="close-modal" type="button" class="border rounded-lg border-red-500 bg-red-500 px-4 py-2">
         취소
       </button>
+      </form>
     </div>
     </div>
   </div>
   </div>
   </div>
-</body>
-
-<script>
-
-
-  // 메뉴 추천 모드
-  function showMenuCard(id, name) {
-    let card = document.getElementById(`card-${id}`);
-    card.innerHTML = `
-        <div id="card-menu" class="w-96 h-48 flex flex-col border border-gray-200 shadow-lg rounded-lg overflow-hidden">
-            <div class="h-40 flex flex-col justify-center space-y-2 items-center">
-                <div class="flex flex-col">
-                    <input type="text" id="menu-input" class="block w-full py-1.5 px-3 text-base text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md" placeholder="추천 메뉴 입력">
-                    <div class="text-xs text-red-500 mt-1">추천 메뉴를 입력하세요</div>
-                </div>
-            </div>
-            <!-- 수정된 부분: restaurant_name과 menu_name을 함께 전송 -->
-            <form method="POST" action="{{ url_for('add_menu') }}">
-                <input type="hidden" name="restaurant_name" value="${name}"> <!-- name 파라미터를 hidden 필드로 보내기 -->
-                <input type="hidden" name="menu_name" id="hidden-menu-name"> <!-- 메뉴 이름을 hidden 필드로 보내기 -->
-
-                <div class="flex space-x-8 mt-auto mb-3 justify-center text-sm text-white">
-                    <button type="submit" class="border rounded-lg border-blue-500 bg-blue-500 p-2" onclick="submitForm(event)">확인</button>
-                    <div class="border rounded-lg border-red-500 bg-red-500 p-2" onclick="reloadPage()">취소</div>
-                </div>
-            </form>
-        </div>
-    `;
-    $(`#card-${id}`).append(temp_html);
-  }
-
-  //  function submitForm() {
-  //     const menuName = document.getElementById("hidden-menu-name").value; // 사용자가 입력한 메뉴 이름 가져오기
-  //     document.getElementById("hidden-menu-name").value = menuName; // hidden 필드에 설정
-  //   }
-
-  function submitForm(event) {
-    const menuName = document.getElementById("menu-input").value; // 사용자가 입력한 메뉴 이름 가져오기
-    if (!menuName) {
-      alert("메뉴 이름을 입력해 주세요.");
-      event.preventDefault(); // 메뉴 이름이 비었으면 폼 제출을 막음
-      return;
-    }
-    document.getElementById("hidden-menu-name").value = menuName; // hidden 필드에 설정
-  }
-
-  // 새로고침
-  function reloadPage() {
-    location.reload();
-  }
-
-
-  // 플로팅 버튼 클릭 시 모달 표시
-  const openModalBtn = document.getElementById("open-modal");
-  const modal = document.getElementById("modal");
-  const closeModalBtn = document.getElementById("close-modal");
-
-  openModalBtn.addEventListener("click", () => {
-    modal.classList.remove("hidden");  // 모달을 보이게 함
-  });
-
-  // 모달 닫기 버튼 클릭 시 모달 닫기
-  closeModalBtn.addEventListener("click", () => {
-    modal.classList.add("hidden");  // 모달을 숨김
-  });
-
-  // 모달 바깥 부분 클릭 시 모달 닫기
-  modal.addEventListener("click", (event) => {
-    if (event.target === modal) {
-      modal.classList.add("hidden");
-    }
-  });
-
-  // 카테고리 목록 토글
-  function toggleCategoryList() {
-    const categoryList = document.getElementById("category-list");
-    categoryList.classList.toggle("hidden");
-  }
-
-  // 카테고리 선택
-  function selectCategory(category) {
-    const menuButton = document.getElementById("menu-button");
-    menuButton.textContent = category;
-
-    document.getElementById("selected-category").value = category;
-    toggleCategoryList();  // 선택 후 목록 숨기기
-  }
-    // 길찾기 버튼 클릭 시, map_url을 새 창에서 열기
-  function openDirections(mapUrl) {
-    window.open(mapUrl, '_blank');  // '_blank'로 새 창에서 열기
-  }
-</script>
 </body>
 
 </html>
