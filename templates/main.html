@@ -108,9 +108,9 @@
       toggleCategoryList();
     }
 
-  function openDirections(mapUrl) {
-    window.open(mapUrl, '_blank');  // '_blank'로 새 창에서 열기
-  }
+    function openDirections(mapUrl) {
+      window.open(mapUrl, '_blank');  // '_blank'로 새 창에서 열기
+    }
 
     window.addEventListener('DOMContentLoaded', function () {
       // selectedCategory의 값 가져오기
@@ -231,19 +231,32 @@
 
 <body>
   <!-- 헤더 -->
-  <header class="w-full relative py-6 bg-white shadow-md text-center">
-    <!-- 제목: 중앙 정렬 -->
-    <h1 class="text-2xl font-bold">일요일에 뭐 먹지?</h1>
+  <div class="bg-black text-white flex flex-col">
+    <header class="w-full flex justify-between items-center px-6 py-4">
+      <!-- 제목: 중앙 정렬 -->
+      <h1 class="text-white text-3xl font-semibold text-center flex-1">일요일에 뭐 먹지?</h1>
 
-    <!-- 로그아웃 버튼: 오른쪽 상단 정렬 -->
-    <a href="{{ url_for('logout') }}"
-      class="absolute right-6 top-6 px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded shadow">
-      로그아웃
-    </a>
-  </header>
+      <!-- 로그아웃 버튼: 오른쪽 상단 정렬 -->
+      <a href="{{ url_for('logout') }}" class="text-green-400 hover:text-green-300 text-sm">
+        LOGOUT
+      </a>
+    </header>
+    <main class="mt-10 flex flex-col">
+      <div class="flex flex-col justify-start ml-8">
+        <p class="text-green-400 text-lg">Your Journey starts Here_</p>
+        <p class="text-green-400 text-lg">But, Our Cafeteria is Closed on Sundays_</p>
 
-  </header>
+      </div>
+      <div class="flex justify-end mr-8 mb-6">
+        <p class="text-green-400 mt-6 text-lg">
+          일요일, 배가 고플 동료 정글러들을 위해,<br>
+          우측 하단 버튼을 눌러,<br>
+          캠퍼스 근처 맛집을 등록해 주세요 :)
+        </p>
+      </div>
 
+    </main>
+  </div>
   <!-- 링크 입력 플로팅 버튼 -->
   <div id="open-modal" class="relative">
     <button
@@ -256,19 +269,20 @@
   </div>
   <div class="hidden" id="selectedCategory">{{selected_category}}</div>
   <!-- 카테고리 필터 -->
-  <nav class="w-full bg-gray-200 py-3">
-    <ul class="flex justify-center space-x-6 text-gray-800 font-medium>
-        {% for category in categories %}
-        <li class=" cursor-pointer hover:text-gray-500 {% if category==selected_category %} text-black font-bold {%
-      else %} text-gray-500 {% endif %}">
-      <a href="{{ url_for('main', category=category) }}" class="category-link">{{ category | capitalize }}</a>
+  <nav class="w-full bg-gray-800 py-3">
+    <ul class="flex justify-center ml-6 space-x-6 text-sm text-white font-medium">
+      <li class="mr-8"><code>&lt;Category /&gt;</code></li>
+      {% for category in categories %}
+      <li class=" cursor-pointer hover:text-gray-100 {% if category==selected_category %} text-white font-bold {%
+      else %} text-gray-200 {% endif %}">
+        <a href="{{ url_for('main', category=category) }}" class="category-link">{{ category | capitalize }}</a>
       </li>
       {% endfor %}
     </ul>
   </nav>
 
   <div class="mx-auto max-w-4xl p-4">
-    <h2 class="text-xl font-semibold mb-4">추천 식당 목록</h2>
+    <h2 class="text-xl font-semibold mb-4"><code>&lt;List /&gt;</code></h2>
 
     <div id="card-list" class="flex flex-wrap gap-8 p-4">
       {% if restaurants %} {% for restaurant in restaurants %}
@@ -297,16 +311,16 @@
           <div class="flex flex-row space-x-8 mt-auto justify-center text-sm text-white">
             <form method="POST" action="{{ url_for('like_restaurant', restaurant_id=restaurant.restaurant_id) }}">
               <button type="submit" class="border rounded-lg border-blue-500 bg-blue-500 p-1">
-                ❤️  <span>{{ restaurant.likes }}</span>
+                ❤️ <span>{{ restaurant.likes }}</span>
               </button>
               <button class="border rounded-lg border-green-500 bg-green-500 p-1"
-              onclick="openDirections('{{ restaurant.map_url }}')">
-              네이버 길찾기
-            </button>
-            <button class="border rounded-lg border-red-500 bg-red-500 p-1"
-              onclick="showMenuCard('{{ loop.index }}', '{{ restaurant.name }}')">
-              메뉴 추천
-            </button>
+                onclick="openDirections('{{ restaurant.map_url }}')">
+                네이버 길찾기
+              </button>
+              <button class="border rounded-lg border-red-500 bg-red-500 p-1"
+                onclick="showMenuCard('{{ loop.index }}', '{{ restaurant.name }}')">
+                메뉴 추천
+              </button>
             </form>
           </div>
         </div>
@@ -365,15 +379,15 @@
           </div>
         </div>
         <div class="flex space-x-8 mt-auto mb-3 justify-center text-sm text-white">
-      <button id="confirm" class="border rounded-lg border-blue-500 bg-blue-500 px-4 py-2">
-        확인
-      </button>
-      <button id="close-modal" type="button" class="border rounded-lg border-red-500 bg-red-500 px-4 py-2">
-        취소
-      </button>
+          <button id="confirm" class="border rounded-lg border-blue-500 bg-blue-500 px-4 py-2">
+            확인
+          </button>
+          <button id="close-modal" type="button" class="border rounded-lg border-red-500 bg-red-500 px-4 py-2">
+            취소
+          </button>
       </form>
     </div>
-    </div>
+  </div>
   </div>
   </div>
   </div>

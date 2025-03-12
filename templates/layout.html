@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <title>{% block title %}일요일에 뭐 먹지?{% endblock %}</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body class="bg-gray-100 flex items-center justify-center min-h-screen">
-    <!-- 공통 레이아웃 -->
-    {% block content %}{% endblock %}
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>{% block title %}일요일에 뭐 먹지?{% endblock %}</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <!-- 공통 레이아웃 -->
+  {% block content %}{% endblock %}
+</body>
+
 </html>
