@@ -264,7 +264,7 @@ def get_naver_url():
 
     print(f"Received category: {category}")
     print(f"Received naver_url: {naver_url}")
-    parse_url(naver_url)
+    parse_url(naver_url, category)
 
     
     return redirect(url_for('main'))  # 다른 페이지로 리디렉션하거나 결과를 처리
@@ -277,7 +277,7 @@ def initialize_driver():
     return driver
 
 #  실제 parsing 함수
-def parse_url(url):
+def parse_url(url, category):
     driver = initialize_driver()  # 새로운 driver 인스턴스를 생성
 
     start_time = time.time()  # 크롤링 시작 시간 기록
@@ -341,9 +341,10 @@ def parse_url(url):
         print("이미지 찾을 수 없음:", e)
 
     restaurant_data = {
+        "restaurant_id": ObjectId(),
         "name": shop_name.text,
         "address": address.text,
-        "category": "한식",  # 카테고리는 수집된 카테고리 값으로 설정
+        "category": category,  # 카테고리는 수집된 카테고리 값으로 설정
         "naver_url": url,  # 입력된 네이버 URL
         "likes": 0,  # 좋아요 수는 크롤링 시점에서 수집할 수 없다면 0으로 기본값 설정
         "description": "설명 없음",  # 설명도 크롤링하거나 입력된 값으로 설정
@@ -364,7 +365,7 @@ def parse_url(url):
 # MOCKDATA 삽입
 ##################################################
 
-# restaurants_collection.drop()  # 기존 컬렉션 삭제
+restaurants_collection.drop()  # 기존 컬렉션 삭제
 menus_collection.drop() # 기존 메뉴 컬렉션 삭제
 
 test_data = [
