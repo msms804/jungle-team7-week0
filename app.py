@@ -4,6 +4,7 @@ from datetime import timedelta, datetime
 from bson import ObjectId  # ObjectId를 사용하기 위해 추가
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.chrome.options import Options 
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -388,7 +389,13 @@ def create_directions_url(start_lat, start_lon, start_name, shop_name, address):
 # WebDriver 인스턴스 생성 함수
 def initialize_driver():
     # 새로운 WebDriver 세션 시작
-    driver = webdriver.Chrome()
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")  # 창을 띄우지 않음
+    chrome_options.add_argument("--disable-gpu")  # GPU 가속 비활성화
+    chrome_options.add_argument("--no-sandbox")  # 보안 샌드박스 비활성화
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
     return driver
 
 #  실제 parsing 함수
