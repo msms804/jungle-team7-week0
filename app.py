@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+import requests
 from datetime import timedelta, datetime
 from bson import ObjectId  # ObjectId를 사용하기 위해 추가
 from selenium import webdriver
@@ -9,6 +10,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import pymongo
+import urllib.parse
 from flask import redirect, url_for, flash
 
 ##################################################
@@ -182,8 +184,15 @@ def main():
         return redirect(url_for("login"))
     
     category = request.args.get("category", "전체")  # 기본값 "전체"
+    page = int(request.args.get('page', 1))  # 첫 번째 페이지
+    per_card = 6  # 한 번에 보여줄 데이터 개수
+
+
+
     categories = ["전체", "치킨", "한식", "카페/디저트", "중식", "버거/샌드위치", "분식", "회/초밥", "일식/돈가스", "기타"]
     query = {} if category == "전체" else {"category": category}
+
+    # restaurants = list(restaurants_collection.find(query).skip((page - 1) * per_card).limit(per_card).sort("likes", -1))
 
     restaurants = list(restaurants_collection.find(query, {"_id": 0}).limit(6))  # ObjectId 제거
 
@@ -291,6 +300,19 @@ def add_menu():
 @app.route('/register', methods=['POST'])
 def get_naver_url():
     naver_url = request.form.get('naver_url')
+    
+    # 중복된 url 등록시
+    existing_restaurant = restaurants_collection.find_one({"naver_url": naver_url})
+
+    # 중복처리시 Parsing 없이 메인페이지로 리턴
+    if existing_restaurant:
+        return """
+        <script>
+          alert("이미 식당이 존재합니다.");
+          window.location.href = "/list"  
+        </script>
+            """
+
     category = request.form.get('category') # 사용자 지정 카테고리
 
     print(f"Received category: {category}")
@@ -299,6 +321,68 @@ def get_naver_url():
 
     
     return redirect(url_for('main'))  # 다른 페이지로 리디렉션하거나 결과를 처리
+
+
+# 네이버 지도 API 활용 -> 경도, 위도 가져오기
+def get_geoCode(address):
+    # 네이버 클라우드 Maps Geocoding API를 사용하여 주소를 좌표로 변환
+    client_id = "iund2fuwi7"  # 네이버 클라우드 API Access Key
+    client_secret = "DwzFixhDkyWQF7XxO0dJ0eEaltG4cJuBdHOLMXKu"  # 네이버 클라우드 API Secret Key
+    
+    url = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode"
+    
+    params = {
+        "query": address  # 변환할 주소
+    }
+    
+    headers = {
+        "x-ncp-apigw-api-key-id": client_id,
+        "x-ncp-apigw-api-key": client_secret,
+        "Accept": "application/json"  # 응답 형식
+    }
+    
+    # API 요청
+    response = requests.get(url, headers=headers, params=params)
+    
+    if response.status_code == 200:
+        data = response.json()
+        if data['addresses']:
+            # 첫 번째 결과의 좌표 반환
+            lat = data['addresses'][0]['y']
+            lon = data['addresses'][0]['x']
+            return lat, lon
+        else:
+            print("주소를 찾을 수 없습니다.")
+            return None
+    else:
+        print(f"API 호출 오류: {response.status_code}")
+        return None
+
+def create_directions_url(start_lat, start_lon, start_name, shop_name, address):
+    """
+    주소를 받아서 해당 주소에 대한 위도, 경도를 구하고
+    네이버 길찾기 URL을 생성하는 함수
+    """
+    # 주소로부터 위도, 경도를 구하기
+    end_coordinates = get_geoCode(address)
+    
+    if end_coordinates:
+        end_lat, end_lon = end_coordinates
+        
+        # 네이버 길찾기 URL 형식 (주소와 이름을 URL 인코딩)
+        start_name_encoded = urllib.parse.quote(start_name)  # 출발지 이름 URL 인코딩
+        finish_name_encoded = urllib.parse.quote(shop_name)  # 도착지 이름 URL 인코딩
+
+        directions_url = f"https://map.naver.com/p/directions/{start_lat},{start_lon},{start_name_encoded}/{end_lon},{end_lat},{finish_name_encoded}/-/walk"
+        
+        # 생성된 URL 출력
+        print(f"생성된 네이버 길찾기 링크: {directions_url}")
+        
+        return directions_url
+    else:
+        # 좌표를 가져오지 못한 경우
+        print("좌표를 가져올 수 없습니다.")
+        return None
 
 
 # WebDriver 인스턴스 생성 함수
@@ -371,6 +455,10 @@ def parse_url(url, category):
     except Exception as e:
         print("이미지 찾을 수 없음:", e)
 
+    
+    lat, lon = get_geoCode(address.text)
+    map_url = create_directions_url(14160700.429881, 4476757.1008275, "크래프톤 정글캠퍼스", shop_name.text, address.text)
+
     restaurant_data = {
         "restaurant_id": ObjectId(),
         "name": shop_name.text,
@@ -380,8 +468,12 @@ def parse_url(url, category):
         "likes": 0,  # 좋아요 수는 크롤링 시점에서 수집할 수 없다면 0으로 기본값 설정
         "description": "설명 없음",  # 설명도 크롤링하거나 입력된 값으로 설정
         "image_url": img_src,  # 크롤링된 이미지 URL
+        "map_url" : map_url, # 길찾기 링크
         "menus": []  # 메뉴 정보는 수집되지 않으므로 기본 빈 리스트
     }
+
+
+
         
     restaurants_collection.insert_one(restaurant_data)
 
@@ -392,128 +484,15 @@ def parse_url(url, category):
     crawling_time = end_time - start_time  # 소요 시간 계산
     print(f"크롤링 소요 시간: {crawling_time:.2f} 초")
 
+
+
+
 ##################################################
 # MOCKDATA 삽입
 ##################################################
 
-# restaurants_collection.drop()  # 기존 컬렉션 삭제
-#menus_collection.drop() # 기존 메뉴 컬렉션 삭제 
-
-test_data = [
-    {
-        "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d11"),
-        "name": "김밥천국",
-        "address": "서울특별시 강남구 테헤란로 123",
-        "category": "한식",
-        "naver_url": "https://map.naver.com/v5/entry/place/123456",
-        "likes": 120,
-        "description": "저렴하고 다양한 한식 메뉴를 제공하는 분식집",
-        "image_url": "https://example.com/images/kimbap.jpg",
-        "menus": ["김밥", "어묵", "떡볶이"]
-    },
-    {
-        "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d12"),
-        "name": "짜장명가",
-        "address": "서울특별시 마포구 양화로 456",
-        "category": "중식",
-        "naver_url": "https://map.naver.com/v5/entry/place/654321",
-        "likes": 200,
-        "description": "정통 짜장면과 탕수육이 인기 있는 중식당",
-        "image_url": "https://example.com/images/jajangmyeon.jpg",
-        "menus": ["짜장", "짬뽕"]
-
-    },
-    {
-        "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d13"),
-        "name": "스시야",
-        "address": "부산광역시 해운대구 해운대로 789",
-        "category": "일식/돈가스",
-        "naver_url": "https://map.naver.com/v5/entry/place/789123",
-        "likes": 300,
-        "description": "싱싱한 회와 스시를 제공하는 일본식 초밥 전문점",
-        "image_url": "https://example.com/images/sushi.jpg",
-        "menus": ["고등어", "참치"]
-
-    },
-    {
-        "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d14"),
-        "name": "미스터 피자",
-        "address": "대구광역시 중구 중앙대로 321",
-        "category": "기타",
-        "naver_url": "https://map.naver.com/v5/entry/place/321789",
-        "likes": 150,
-        "description": "다양한 토핑과 수제 도우가 특징인 피자 전문점",
-        "image_url": "https://example.com/images/pizza.jpg",
-        "menus": []
-
-    },
-    {
-        "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d15"),
-        "name": "육쌈냉면",
-        "address": "서울특별시 종로구 종로3가 12",
-        "category": "한식",
-        "naver_url": "https://map.naver.com/v5/entry/place/987654",
-        "likes": 180,
-        "description": "숯불 고기와 함께 먹는 냉면 전문점",
-        "image_url": "https://example.com/images/naengmyeon.jpg",
-        "menus": ["냉면"]
-
-    }
-]
-
-test_menu_data = [
-    {
-        "menu_id": 1,
-        "restaurant_id" : ObjectId("650f0c1e8a3b4a2d4c8e7d15"),
-        "user_id": 'test1',
-        "name": "육쌈냉면",
-        "menu_name": '냉면',
-        "datetime": datetime.utcnow()
-    },
-    {
-        "menu_id": 2,
-        "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d15"),
-        "user_id": 'test2',
-        "name": "육쌈냉면",
-        "menu_name": '갈비',
-        "datetime": datetime.utcnow() + timedelta(minutes=1)
-    },
-    {
-        "menu_id": 3,
-        "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d15"),
-        "user_id": 'test3',
-        "name": "육쌈냉면",
-        "menu_name": '냉면2',
-        "datetime": datetime.utcnow() + timedelta(minutes=2)
-    },
-    {
-        "menu_id": 4,
-        "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d12"),
-        "user_id": 'test3',
-        "name": "짜장명가",
-        "menu_name": '짜장면',
-        "datetime": datetime.utcnow() + timedelta(minutes=3)
-    },
-    {
-        "menu_id": 5,
-        "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d12"),
-        "user_id": 'test3',
-        "name": "짜장명가",
-        "menu_name": '짬뽕',
-        "datetime": datetime.utcnow() + timedelta(minutes=4)
-    },
-]
 
 
-# MongoDB에 데이터 삽입 (중복 방지: 같은 restaurant_id가 있는 경우 삽입 안 함)
-for data in test_data:
-    if not restaurants_collection.find_one({"restaurant_id": data["restaurant_id"]}):
-        restaurants_collection.insert_one(data)
-
-# 메뉴데이터 db에 삽입
-for data in test_menu_data:
-    if not menus_collection.find_one({"menu_id": data["menu_id"]}):
-        menus_collection.insert_one(data)
 # mongodb에 메뉴 삽입
 
 ##################################################

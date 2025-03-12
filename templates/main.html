@@ -186,12 +186,16 @@
                         <div class="flex flex-row space-x-8 mt-auto justify-center text-sm text-white">
                           <form method="POST"  action="/like/${restaurant.restaurant_id}">
                             <button type="submit" class="border rounded-lg border-blue-500 bg-blue-500 p-1">
-                              ❤️ 좋아요 <span>${restaurant.likes}</span>
+                              ❤️  <span>${restaurant.likes}</span>
+                            </button>
+                            <button class="border rounded-lg border-green-500 bg-green-500 p-1"
+                              onclick="openDirections('${restaurant.map_url}')">
+                              네이버 길찾기
                             </button>
                              <button class="border rounded-lg border-red-500 bg-red-500 p-1"
                           onclick="showMenuCard('${restaurant.naver_url}', '${restaurant.name}')">
-              메뉴 추천
-            </button>
+                              메뉴 추천
+                            </button>
                           </form>
                         </div>
                       </div>
@@ -289,13 +293,17 @@
           <div class="flex flex-row space-x-8 mt-auto justify-center text-sm text-white">
             <form method="POST" action="{{ url_for('like_restaurant', restaurant_id=restaurant.restaurant_id) }}">
               <button type="submit" class="border rounded-lg border-blue-500 bg-blue-500 p-1">
-                ❤️ 좋아요 <span>{{ restaurant.likes }}</span>
+                ❤️  <span>{{ restaurant.likes }}</span>
               </button>
-            </form>
+              <button class="border rounded-lg border-green-500 bg-green-500 p-1"
+              onclick="openDirections('{{ restaurant.map_url }}')">
+              네이버 길찾기
+            </button>
             <button class="border rounded-lg border-red-500 bg-red-500 p-1"
               onclick="showMenuCard('{{ loop.index }}', '{{ restaurant.name }}')">
               메뉴 추천
             </button>
+            </form>
           </div>
         </div>
       </div>
@@ -368,6 +376,8 @@
 </body>
 
 <script>
+
+
   // 메뉴 추천 모드
   function showMenuCard(id, name) {
     let card = document.getElementById(`card-${id}`);
@@ -449,6 +459,10 @@
 
     document.getElementById("selected-category").value = category;
     toggleCategoryList();  // 선택 후 목록 숨기기
+  }
+    // 길찾기 버튼 클릭 시, map_url을 새 창에서 열기
+  function openDirections(mapUrl) {
+    window.open(mapUrl, '_blank');  // '_blank'로 새 창에서 열기
   }
 </script>
 </body>
