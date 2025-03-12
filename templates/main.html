@@ -116,28 +116,27 @@
   
   </header>
 
-  <!-- 링크 입력 플로팅 버튼 -->
-  <div id="open-modal" class="relative">
-    <button
-      class="fixed bottom-8 right-8 bg-blue-500 text-white p-4 rounded-full shadow-lg hover:bg-blue-600 transition-colors">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-        class="size-6">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-      </svg>
-    </button>
-  </div>
-  <!-- ..? -->
-  <!-- 카테고리 필터 -->
-  <nav class="w-full bg-gray-200 py-3">
-    <ul class="flex justify-center space-x-6 text-gray-800 font-medium">
-      {% for category in categories %}
-      <li
-        class="cursor-pointer hover:text-gray-500 {% if category == selected_category %} text-black font-bold {% else %} text-gray-500 {% endif %}">
-        <a href="{{ url_for('main', category=category) }}">{{ category | capitalize }}</a>
-      </li>
-      {% endfor %}
-    </ul>
-  </nav>
+    <!-- 링크 입력 플로팅 버튼 -->
+    <div id="open-modal" class="relative">
+      <button
+        class="fixed bottom-8 right-8 bg-blue-500 text-white p-4 rounded-full shadow-lg hover:bg-blue-600 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+          class="size-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+      </button>
+    </div>
+    <!-- 카테고리 필터 -->
+    <nav class="w-full bg-gray-200 py-3">
+      <ul class="flex justify-center space-x-6 text-gray-800 font-medium>
+        {% for category in categories %}
+        <li
+          class="cursor-pointer hover:text-gray-500 {% if category == selected_category %} text-black font-bold {% else %} text-gray-500 {% endif %}">
+          <a href="{{ url_for('main', category=category) }}">{{ category | capitalize }}</a>
+        </li>
+        {% endfor %}
+      </ul>
+    </nav>
 
   <div class="mx-auto max-w-4xl p-4">
     <h2 class="text-xl font-semibold mb-4">추천 식당 목록</h2>
@@ -188,88 +187,112 @@
   </div>
 
 
-  <!-- 플로팅 버튼 클릭 시 나타나는 모달 -->
-  <div id="modal" class="fixed inset-0 bg-black/30 flex justify-center items-center hidden">
-    <div id="naver-link" class="w-96 h-48 flex flex-col border border-gray-200 shadow-lg rounded-lg bg-white p-4">
-      <div class="h-40 flex flex-col justify-center space-y-2 items-center">
-        <div class="relative inline-block text-left">
-          <button type="button"
-            class="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50"
-            id="menu-button" onclick="toggleCategoryList()">
-            카테고리를 선택해주세요
+    <!-- 플로팅 버튼 클릭 시 나타나는 모달 -->
+    <div id="modal" class="fixed inset-0 bg-black/30 flex justify-center items-center hidden">
+      <div id="naver-link" class="w-96 h-48 flex flex-col border border-gray-200 shadow-lg rounded-lg bg-white p-4">
+        <div class="h-40 flex flex-col justify-center space-y-2 items-center">
+          <div class="relative inline-block text-left">
+            <button type="button"
+              class="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50"
+              id="menu-button" onclick="toggleCategoryList()">
+              카테고리를 선택해주세요
+            </button>
+            <!-- 카테고리 목록 (숨겨져 있음) -->
+            <div id="category-list" class="absolute w-full mt-2 bg-white shadow-lg rounded-md max-h-40 overflow-y-auto hidden">
+              <ul class="py-1 text-sm text-gray-700">
+                {% for category_item in categories %}
+                  <li>
+                    <button class="block w-full text-left px-4 py-2 
+                      {% if category_item == selected_category %} text-black font-bold {% else %} text-gray-500 {% endif %}"
+                      onclick="selectCategory('{{ category_item }}')">
+                      {{ category_item }}
+                    </button>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+          <div class="flex flex-col">
+            <input type="text" id="price"
+              class="block w-full py-1.5 px-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none border border-gray-300 rounded-md"
+              placeholder="네이버 지도 링크 입력" />
+            <div class="text-xs text-red-500 mt-1">
+              네이버지도 > 공유 탭에 들어가서 링크를 복사 후 붙여넣기
+            </div>
+          </div>
+        </div>
+        <div class="flex space-x-8 mt-auto mb-3 justify-center text-sm text-white">
+          <button id="confirm" class="border rounded-lg border-blue-500 bg-blue-500 px-4 py-2">
+            확인
           </button>
-          <!-- 카테고리 목록 (숨겨져 있음) -->
-          <div id="category-list"
-            class="absolute w-full mt-2 bg-white shadow-lg rounded-md max-h-40 overflow-y-auto hidden">
-            <ul class="py-1 text-sm text-gray-700">
-              <li>
-                <button class="block w-full text-left px-4 py-2" onclick="selectCategory('전체')">
-                  전체
-                </button>
-              </li>
-              <li>
-                <button class="block w-full text-left px-4 py-2" onclick="selectCategory('한식')">
-                  한식
-                </button>
-              </li>
-              <li>
-                <button class="block w-full text-left px-4 py-2" onclick="selectCategory('카페/디저트')">
-                  카페/디저트
-                </button>
-              </li>
-              <li>
-                <button class="block w-full text-left px-4 py-2" onclick="selectCategory('중식')">
-                  중식
-                </button>
-              </li>
-              <li>
-                <button class="block w-full text-left px-4 py-2" onclick="selectCategory('버거/샌드위치')">
-                  버거/샌드위치
-                </button>
-              </li>
-              <li>
-                <button class="block w-full text-left px-4 py-2" onclick="selectCategory('분식')">
-                  분식
-                </button>
-              </li>
-              <li>
-                <button class="block w-full text-left px-4 py-2" onclick="selectCategory('회/초밥')">
-                  회/초밥
-                </button>
-              </li>
-              <li>
-                <button class="block w-full text-left px-4 py-2" onclick="selectCategory('일식/돈가스')">
-                  일식/돈가스
-                </button>
-              </li>
-              <li>
-                <button class="block w-full text-left px-4 py-2" onclick="selectCategory('기타')">
-                  기타
-                </button>
-              </li>
-            </ul>
-          </div>
+          <button id="close-modal" class="border rounded-lg border-red-500 bg-red-500 px-4 py-2">
+            취소
+          </button>
         </div>
-        <div class="flex flex-col">
-          <input type="text" id="price"
-            class="block w-full py-1.5 px-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none border border-gray-300 rounded-md"
-            placeholder="네이버 지도 링크 입력" />
-          <div class="text-xs text-red-500 mt-1">
-            네이버지도 > 공유 탭에 들어가서 링크를 복사 후 붙여넣기
-          </div>
-        </div>
-      </div>
-      <div class="flex space-x-8 mt-auto mb-3 justify-center text-sm text-white">
-        <button id="confirm" class="border rounded-lg border-blue-500 bg-blue-500 px-4 py-2">
-          확인
-        </button>
-        <button id="close-modal" class="border rounded-lg border-red-500 bg-red-500 px-4 py-2">
-          취소
-        </button>
       </div>
     </div>
   </div>
-  </div>
+</body>
+
+<script>
+  // 메뉴 추천 모드
+  function showMenuCard(id) {
+    let card = document.getElementById(`card-${id}`);
+    card.innerHTML = `
+                <div id="card-menu" class="w-96 h-48 flex flex-col border border-gray-200 shadow-lg rounded-lg overflow-hidden">
+                    <div class="h-40 flex flex-col justify-center space-y-2 items-center">
+                        <div class="flex flex-col">
+                            <input type="text" id="menu-input" class="block w-full py-1.5 px-3 text-base text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md" placeholder="추천 메뉴 입력">
+                            <div class="text-xs text-red-500 mt-1">추천 메뉴를 입력하세요</div>
+                        </div>
+                    </div>
+                    <div class="flex space-x-8 mt-auto mb-3 justify-center text-sm text-white">
+                        <button class="border rounded-lg border-blue-500 bg-blue-500 px-4 py-2" onclick="reloadPage()">확인</button>
+                        <button class="border rounded-lg border-red-500 bg-red-500 px-4 py-2" onclick="reloadPage()">취소</button>
+                    </div>
+                </div>
+            `;
+  }
+  // 새로고침
+  function reloadPage() {
+    location.reload();
+  }
+
+
+  // 플로팅 버튼 클릭 시 모달 표시
+    const openModalBtn = document.getElementById("open-modal");
+    const modal = document.getElementById("modal");
+    const closeModalBtn = document.getElementById("close-modal");
+
+    openModalBtn.addEventListener("click", () => {
+      modal.classList.remove("hidden");  // 모달을 보이게 함
+    });
+
+    // 모달 닫기 버튼 클릭 시 모달 닫기
+    closeModalBtn.addEventListener("click", () => {
+      modal.classList.add("hidden");  // 모달을 숨김
+    });
+
+    // 모달 바깥 부분 클릭 시 모달 닫기
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        modal.classList.add("hidden");
+      }
+    });
+
+    // 카테고리 목록 토글
+      function toggleCategoryList() {
+          const categoryList = document.getElementById("category-list");
+          categoryList.classList.toggle("hidden");
+      }
+
+      // 카테고리 선택
+      function selectCategory(category) {
+          const menuButton = document.getElementById("menu-button");
+          menuButton.textContent = category;
+          toggleCategoryList();  // 선택 후 목록 숨기기
+      }
+</script>
 </body>
 
 </html>
