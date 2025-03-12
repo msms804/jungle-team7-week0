@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from datetime import timedelta, datetime
 from bson import ObjectId  # ObjectId를 사용하기 위해 추가
 from selenium import webdriver
@@ -185,9 +185,40 @@ def main():
     categories = ["전체", "치킨", "한식", "카페/디저트", "중식", "버거/샌드위치", "분식", "회/초밥", "일식/돈가스", "기타"]
     query = {} if category == "전체" else {"category": category}
 
-    restaurants = list(restaurants_collection.find(query, {"_id": 0}))  # ObjectId 제거
+    restaurants = list(restaurants_collection.find(query, {"_id": 0}).limit(6))  # ObjectId 제거
 
     return render_template("main.html", restaurants=restaurants, selected_category=category, categories=categories)
+##################################################
+# 3 - 1 무한스크롤!!
+##################################################
+@app.route("/list/infinite")
+def get_restaurants():
+    """
+    음식점 목록을 JSON으로 반환하는 API
+    """
+
+    if "_id" not in session:
+        return jsonify({"error": "로그인이 필요합니다."}), 401  # 401 Unauthorized 응답
+
+    try:
+        category = request.args.get("category", "전체")  # 기본값 "전체"
+        query = {} if category == "전체" else {"category": category}
+
+        offset = int(request.args.get('offset'))
+        limit = int(request.args.get('limit'))
+
+        restaurants = list(restaurants_collection.find(query, {"_id": 0}).skip(offset).limit(limit))
+        for restaurant in restaurants:
+            restaurant["restaurant_id"] = str(restaurant["restaurant_id"])  # 변환 처리
+        print(restaurants)
+        return jsonify({"restaurants": restaurants})  # JSON 응답
+
+        # print("식당", len(restaurants))
+        # return jsonify({"restaurants": restaurants})  # 정상 JSON 반환
+
+    except Exception as e:
+        print(f"서버 오류: {str(e)}")  # 터미널에서 오류 로그 확인
+        return jsonify({"error": "서버 내부 오류"}), 500
 
 ##################################################
 # 4) 로그아웃
@@ -365,8 +396,8 @@ def parse_url(url, category):
 # MOCKDATA 삽입
 ##################################################
 
-restaurants_collection.drop()  # 기존 컬렉션 삭제
-menus_collection.drop() # 기존 메뉴 컬렉션 삭제
+# restaurants_collection.drop()  # 기존 컬렉션 삭제
+#menus_collection.drop() # 기존 메뉴 컬렉션 삭제 
 
 test_data = [
     {

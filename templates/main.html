@@ -76,17 +76,16 @@
 
 
     }
-      function submitForm(event) {
-        const menuName = document.getElementById("menu_name").value; // 사용자가 입력한 메뉴 이름 가져오기
-        if (!menuName) {
-          alert("메뉴 이름을 입력해주세요.");
-          event.preventDefault(); // 폼 제출을 막음
-          return;
-        }
-        document.getElementById("hidden-menu-name").value = menuName; // hidden 필드에 설정
-        console.log(menuName);
-        document.getElementById("menuForm").submit(); // 폼 제출
+    function submitForm(event) {
+      const menuName = document.getElementById("menu_name").value; // 사용자가 입력한 메뉴 이름 가져오기
+      if (!menuName) {
+        alert("메뉴 이름을 입력해주세요.");
+        event.preventDefault(); // 폼 제출을 막음
+        return;
       }
+      document.getElementById("hidden-menu-name").value = menuName; // hidden 필드에 설정
+      document.getElementById("menuForm").submit(); // 폼 제출
+    }
     function reloadPage() {
       location.reload();
     }
@@ -99,10 +98,32 @@
 
     // 카테고리 선택
     function selectCategory(category) {
-      const menuButton = document.getElementById("menu-button");
-      menuButton.textContent = category;
-      toggleCategoryList();  // 선택 후 목록 숨기기
+      // 카테고리를 버튼에 표시
+      document.getElementById('menu-button').innerText = category;
+
+      // 선택된 카테고리를 hidden 필드에 설정
+      document.getElementById('selected-category').value = category;
+
+      // 카테고리 목록 숨기기
+      toggleCategoryList();
     }
+
+    window.addEventListener('DOMContentLoaded', function () {
+      // selectedCategory의 값 가져오기
+      const selectedCategory = document.getElementById('selectedCategory').textContent.trim();
+
+      // 로딩 메시지 요소 가져오기
+      const loadingElement = document.getElementById('loading');
+
+      // selected_category가 "전체"일 경우 로딩 메시지 표시
+      if (selectedCategory === "전체") {
+        loadingElement.classList.remove('hidden');
+      } else {
+        loadingElement.classList.add('hidden');
+      }
+    });
+
+
   </script>
 </head>
 
@@ -131,14 +152,14 @@
       </svg>
     </button>
   </div>
+  <div class="hidden" id="selectedCategory">{{selected_category}}</div>
   <!-- 카테고리 필터 -->
   <nav class="w-full bg-gray-200 py-3">
     <ul class="flex justify-center space-x-6 text-gray-800 font-medium>
         {% for category in categories %}
-        <li
-          class=" cursor-pointer hover:text-gray-500 {% if category==selected_category %} text-black font-bold {% else
-      %} text-gray-500 {% endif %}">
-      <a href="{{ url_for('main', category=category) }}">{{ category | capitalize }}</a>
+        <li class=" cursor-pointer hover:text-gray-500 {% if category==selected_category %} text-black font-bold {%
+      else %} text-gray-500 {% endif %}">
+      <a href="{{ url_for('main', category=category) }}" class="category-link">{{ category | capitalize }}</a>
       </li>
       {% endfor %}
     </ul>
@@ -184,11 +205,16 @@
           </div>
         </div>
       </div>
-      {% endfor %} {% else %}
+      {% endfor %}
+      {% else %}
       <p class="text-center text-gray-500">
         해당 카테고리에 등록된 식당이 없습니다.
       </p>
       {% endif %}
+
+    </div>
+    <div id="loading" class="text-center w-full py-4 text-gray-500">
+      로딩 중...
     </div>
   </div>
 
@@ -223,7 +249,7 @@
       </div>
       <form method="POST" action="{{ url_for('get_naver_url') }}">
         <input type="hidden" name="category" id="selected-category"> <!-- 카테고리 hidden 필드 -->
-        
+
         <div class="flex flex-col">
           <input type="text" name="naver_url" id="price"
             class="block w-full py-1.5 px-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none border border-gray-300 rounded-md"
@@ -232,24 +258,24 @@
             네이버지도 > 공유 탭에 들어가서 링크를 복사 후 붙여넣기
           </div>
         </div>
-
-        <div class="flex space-x-8 mt-auto mb-3 justify-center text-sm text-white">
-          <button id="confirm" class="border rounded-lg border-blue-500 bg-blue-500 px-4 py-2" type="submit">
-            확인
-          </button>
-          <button id="close-modal" class="border rounded-lg border-red-500 bg-red-500 px-4 py-2" type="button" onclick="closeModal()">
-            취소
-          </button>
-        </div>
-      </form>
     </div>
+
+    <div class="flex space-x-8 mt-auto mb-3 justify-center text-sm text-white">
+      <button id="confirm" class="border rounded-lg border-blue-500 bg-blue-500 px-4 py-2">
+        확인
+      </button>
+      <button id="close-modal" class="border rounded-lg border-red-500 bg-red-500 px-4 py-2">
+        취소
+      </button>
+    </div>
+  </div>
   </div>
   </div>
 </body>
 
 <script>
   // 메뉴 추천 모드
-function showMenuCard(id, name) {
+  function showMenuCard(id, name) {
     let card = document.getElementById(`card-${id}`);
     card.innerHTML = `
         <div id="card-menu" class="w-96 h-48 flex flex-col border border-gray-200 shadow-lg rounded-lg overflow-hidden">
@@ -272,19 +298,22 @@ function showMenuCard(id, name) {
         </div>
     `;
     $(`#card-${id}`).append(temp_html);
-}
+  }
 
+  //  function submitForm() {
+  //     const menuName = document.getElementById("hidden-menu-name").value; // 사용자가 입력한 메뉴 이름 가져오기
+  //     document.getElementById("hidden-menu-name").value = menuName; // hidden 필드에 설정
+  //   }
 
-
-function submitForm(event) {
+  function submitForm(event) {
     const menuName = document.getElementById("menu-input").value; // 사용자가 입력한 메뉴 이름 가져오기
     if (!menuName) {
-        alert("메뉴 이름을 입력해 주세요.");
-        event.preventDefault(); // 메뉴 이름이 비었으면 폼 제출을 막음
-        return;
+      alert("메뉴 이름을 입력해 주세요.");
+      event.preventDefault(); // 메뉴 이름이 비었으면 폼 제출을 막음
+      return;
     }
     document.getElementById("hidden-menu-name").value = menuName; // hidden 필드에 설정
-}
+  }
 
   // 새로고침
   function reloadPage() {
