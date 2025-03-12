@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
-from datetime import timedelta
+from datetime import timedelta, datetime
 from bson import ObjectId  # ObjectId를 사용하기 위해 추가
+import uuid
 
 import pymongo
 from flask import redirect, url_for, flash
@@ -21,7 +22,7 @@ client = pymongo.MongoClient("mongodb://localhost:27017/")
 db = client["sundaydb"]          # 데이터베이스 이름
 users_collection = db["users"]      # 유저 정보를 저장할 컬렉션
 restaurants_collection = db["restaurants"]  # 식당 정보 저장할 컬렉션
-
+menus_collection = db["menus"] # 추천메뉴 저장할 컬렉션
 
 
 ##################################################
@@ -212,15 +213,63 @@ def like_restaurant(restaurant_id):
     
     return redirect(url_for("main"))
 
+##################################################
+# 6) 추천메뉴 삽입 기능
+##################################################
 
+@app.route('/add_menu', methods=['POST'])
+def add_menu():
+    restaurant_name = request.form.get('restaurant_name')
+    menu_name = request.form.get('menu_name')
+    print("Restaurant Name:", restaurant_name)  # restaurant_name 값
+    print("Menu Name:", menu_name)  # 입력된 메뉴 이름 값
 
+    # restaurants_collection 에서 restaurant_name 와 같은 것에 menu 를 푸시
+     # restaurant_name으로 해당 식당 찾기
+    restaurant = restaurants_collection.find_one({"name": restaurant_name})
+
+    if restaurant:
+        # menus 배열의 0번째 위치에 새로운 메뉴 추가 (앞에 추가)
+        restaurants_collection.update_one(
+            {"name": restaurant_name},
+            {"$push": {"menus": {"$each": [menu_name], "$position": 0, "$slice": 3}}}
+        )
+        print(f"'{menu_name}'을(를) '{restaurant_name}'의 첫 번째 메뉴로 추가했습니다.")
+    else:
+        print("해당 식당을 찾을 수 없습니다.")
+
+    # 해당 식당을 찾기
+    # for restaurant in restaurants:
+    #     if restaurant['restaurant_id'] == restaurant_id:
+    #         # 메뉴를 배열의 앞에 추가
+    #         restaurant['menus'].insert(0, new_menu)  # 배열의 앞에 추가
+    #         break
+
+    # 메뉴 추가 후 식당 목록 페이지로 리디렉션
+    return redirect(url_for('main'))
+
+##################################################
+# 7) 추천메뉴 렌더링
+##################################################
+# @app.route("/menus")
+# def get_menus():
+#     # 클라이언트에서 restaurant.name을 전달받기
+#     restaurant_name = request.args.get("restaurant_name")
+    
+#     # 메뉴를 최신순으로 3개 가져오기 (메뉴를 datetime 기준으로 정렬)
+#     menus = list(menus_collection.find(
+#         {"restaurant_name": restaurant_name}
+#     ).sort("datetime", -1).limit(3))  # 최신순 정렬 후 상위 3개만 가져오기
+    
+#     # 메뉴 데이터를 클라이언트로 전달
+#     return render_template("main.html", menus=menus)
 
 ##################################################
 # MOCKDATA 삽입
 ##################################################
 
 restaurants_collection.drop()  # 기존 컬렉션 삭제
-
+menus_collection.drop() # 기존 메뉴 컬렉션 삭제
 
 test_data = [
     {
@@ -232,6 +281,7 @@ test_data = [
         "likes": 120,
         "description": "저렴하고 다양한 한식 메뉴를 제공하는 분식집",
         "image_url": "https://example.com/images/kimbap.jpg",
+        "menus": ["김밥", "어묵", "떡볶이"]
     },
     {
         "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d12"),
@@ -242,6 +292,8 @@ test_data = [
         "likes": 200,
         "description": "정통 짜장면과 탕수육이 인기 있는 중식당",
         "image_url": "https://example.com/images/jajangmyeon.jpg",
+        "menus": ["짜장", "짬뽕"]
+
     },
     {
         "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d13"),
@@ -252,6 +304,8 @@ test_data = [
         "likes": 300,
         "description": "싱싱한 회와 스시를 제공하는 일본식 초밥 전문점",
         "image_url": "https://example.com/images/sushi.jpg",
+        "menus": ["고등어", "참치"]
+
     },
     {
         "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d14"),
@@ -262,6 +316,8 @@ test_data = [
         "likes": 150,
         "description": "다양한 토핑과 수제 도우가 특징인 피자 전문점",
         "image_url": "https://example.com/images/pizza.jpg",
+        "menus": []
+
     },
     {
         "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d15"),
@@ -272,14 +328,65 @@ test_data = [
         "likes": 180,
         "description": "숯불 고기와 함께 먹는 냉면 전문점",
         "image_url": "https://example.com/images/naengmyeon.jpg",
+        "menus": ["냉면"]
+
     }
 ]
+
+test_menu_data = [
+    {
+        "menu_id": 1,
+        "restaurant_id" : ObjectId("650f0c1e8a3b4a2d4c8e7d15"),
+        "user_id": 'test1',
+        "name": "육쌈냉면",
+        "menu_name": '냉면',
+        "datetime": datetime.utcnow()
+    },
+    {
+        "menu_id": 2,
+        "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d15"),
+        "user_id": 'test2',
+        "name": "육쌈냉면",
+        "menu_name": '갈비',
+        "datetime": datetime.utcnow() + timedelta(minutes=1)
+    },
+    {
+        "menu_id": 3,
+        "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d15"),
+        "user_id": 'test3',
+        "name": "육쌈냉면",
+        "menu_name": '냉면2',
+        "datetime": datetime.utcnow() + timedelta(minutes=2)
+    },
+    {
+        "menu_id": 4,
+        "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d12"),
+        "user_id": 'test3',
+        "name": "짜장명가",
+        "menu_name": '짜장면',
+        "datetime": datetime.utcnow() + timedelta(minutes=3)
+    },
+    {
+        "menu_id": 5,
+        "restaurant_id": ObjectId("650f0c1e8a3b4a2d4c8e7d12"),
+        "user_id": 'test3',
+        "name": "짜장명가",
+        "menu_name": '짬뽕',
+        "datetime": datetime.utcnow() + timedelta(minutes=4)
+    },
+]
+
 
 # MongoDB에 데이터 삽입 (중복 방지: 같은 restaurant_id가 있는 경우 삽입 안 함)
 for data in test_data:
     if not restaurants_collection.find_one({"restaurant_id": data["restaurant_id"]}):
         restaurants_collection.insert_one(data)
 
+# 메뉴데이터 db에 삽입
+for data in test_menu_data:
+    if not menus_collection.find_one({"menu_id": data["menu_id"]}):
+        menus_collection.insert_one(data)
+# mongodb에 메뉴 삽입
 
 ##################################################
 # Flask 실행
