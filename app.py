@@ -1,8 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from datetime import timedelta, datetime
 from bson import ObjectId  # ObjectId를 사용하기 위해 추가
-import uuid
-
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time
 import pymongo
 from flask import redirect, url_for, flash
 
@@ -23,6 +28,14 @@ db = client["sundaydb"]          # 데이터베이스 이름
 users_collection = db["users"]      # 유저 정보를 저장할 컬렉션
 restaurants_collection = db["restaurants"]  # 식당 정보 저장할 컬렉션
 menus_collection = db["menus"] # 추천메뉴 저장할 컬렉션
+
+
+##################################################
+# Selenium 설정
+##################################################
+# driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
+# options = webdriver.ChromeOptions()
+# options.add_argument("--headless")  # GUI 없이 실행
 
 
 ##################################################
@@ -238,37 +251,120 @@ def add_menu():
     else:
         print("해당 식당을 찾을 수 없습니다.")
 
-    # 해당 식당을 찾기
-    # for restaurant in restaurants:
-    #     if restaurant['restaurant_id'] == restaurant_id:
-    #         # 메뉴를 배열의 앞에 추가
-    #         restaurant['menus'].insert(0, new_menu)  # 배열의 앞에 추가
-    #         break
-
-    # 메뉴 추가 후 식당 목록 페이지로 리디렉션
     return redirect(url_for('main'))
 
+
 ##################################################
-# 7) 추천메뉴 렌더링
+# 6) 네이버 지도 링크 받고 Parsing
 ##################################################
-# @app.route("/menus")
-# def get_menus():
-#     # 클라이언트에서 restaurant.name을 전달받기
-#     restaurant_name = request.args.get("restaurant_name")
+@app.route('/register', methods=['POST'])
+def get_naver_url():
+    naver_url = request.form.get('naver_url')
+    category = request.form.get('category') # 사용자 지정 카테고리
+
+    print(f"Received category: {category}")
+    print(f"Received naver_url: {naver_url}")
+    parse_url(naver_url)
+
     
-#     # 메뉴를 최신순으로 3개 가져오기 (메뉴를 datetime 기준으로 정렬)
-#     menus = list(menus_collection.find(
-#         {"restaurant_name": restaurant_name}
-#     ).sort("datetime", -1).limit(3))  # 최신순 정렬 후 상위 3개만 가져오기
+    return redirect(url_for('main'))  # 다른 페이지로 리디렉션하거나 결과를 처리
+
+
+# WebDriver 인스턴스 생성 함수
+def initialize_driver():
+    # 새로운 WebDriver 세션 시작
+    driver = webdriver.Chrome()
+    return driver
+
+#  실제 parsing 함수
+def parse_url(url):
+    driver = initialize_driver()  # 새로운 driver 인스턴스를 생성
+
+    start_time = time.time()  # 크롤링 시작 시간 기록
     
-#     # 메뉴 데이터를 클라이언트로 전달
-#     return render_template("main.html", menus=menus)
+    driver.get(url)
+    time.sleep(1)
+
+    # iframe 요소 찾기
+    try:
+        iframe = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "entryIframe"))  # iframe ID로 찾기
+        )
+        driver.switch_to.frame(iframe)  # iframe으로 전환
+        print("iframe 내부로 이동 완료")
+    except Exception as e:
+        print("iframe을 찾을 수 없습니다:", e)
+
+    ## 가게이름
+    try:
+        shop_name = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "GHAhO"))
+        )
+        print("가게 이름:", shop_name.text)  # 가게 이름 출력
+    except Exception as e:
+        print("가게 이름 찾을 수 없음", e)
+        
+    ## 주소
+    try:
+        address = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "LDgIH"))
+        )
+        print("주소 : ", address.text)
+    except Exception as e:
+        print("주소 찾을 수 없음")
+
+
+    ## 해시태그
+    try:
+        hashtag = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "lnJFt"))
+        )
+        print("해시태그 : ", hashtag.text)
+    except Exception as e:
+        print("해시태그 찾을 수 없음")
+
+    # 이미지 url
+    try:
+        # 'fNygA' 클래스의 div 요소 찾기
+        div_element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "fNygA"))
+        )
+        
+        # 해당 div 안에서 img 태그 찾기
+        img_element = div_element.find_element(By.TAG_NAME, "img")
+        
+        # 이미지 src 속성 추출
+        img_src = img_element.get_attribute("src")
+        print("이미지 src: ", img_src)
+        
+    except Exception as e:
+        print("이미지 찾을 수 없음:", e)
+
+    restaurant_data = {
+        "name": shop_name.text,
+        "address": address.text,
+        "category": "한식",  # 카테고리는 수집된 카테고리 값으로 설정
+        "naver_url": url,  # 입력된 네이버 URL
+        "likes": 0,  # 좋아요 수는 크롤링 시점에서 수집할 수 없다면 0으로 기본값 설정
+        "description": "설명 없음",  # 설명도 크롤링하거나 입력된 값으로 설정
+        "image_url": img_src,  # 크롤링된 이미지 URL
+        "menus": []  # 메뉴 정보는 수집되지 않으므로 기본 빈 리스트
+    }
+        
+    restaurants_collection.insert_one(restaurant_data)
+
+    # WebDriver 종료
+    driver.quit()
+    
+    end_time = time.time()  # 크롤링 종료 시간 기록
+    crawling_time = end_time - start_time  # 소요 시간 계산
+    print(f"크롤링 소요 시간: {crawling_time:.2f} 초")
 
 ##################################################
 # MOCKDATA 삽입
 ##################################################
 
-restaurants_collection.drop()  # 기존 컬렉션 삭제
+# restaurants_collection.drop()  # 기존 컬렉션 삭제
 menus_collection.drop() # 기존 메뉴 컬렉션 삭제
 
 test_data = [
