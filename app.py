@@ -181,10 +181,15 @@ def main():
 @app.route("/logout")
 def logout():
     """
-    수동 로그아웃. (30분 후 자동으로도 세션은 만료됨)
+    - 세션을 비우고 로그인 페이지로 이동
+    - 30분 자동 로그아웃도 적용됨 (세션 유지 시간 설정)
     """
-    session.clear()
-    return redirect(url_for("login"))
+    session.clear()  # 세션 삭제
+    
+    # 로그아웃 메시지를 Flash 메시지로 추가할 수도 있음 (선택 사항)
+    flash("로그아웃 되었습니다. 다시 로그인 해주세요.", "info")
+
+    return redirect(url_for("login"))  # 로그인 페이지로 이동
 
 ##################################################
 # 5) 레스토랑 좋아요 기능
@@ -206,8 +211,6 @@ def like_restaurant(restaurant_id):
     )
     
     return redirect(url_for("main"))
-
-
 
 
 
