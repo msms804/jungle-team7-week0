@@ -60,15 +60,15 @@
       </div>
 
       <!-- 수정된 부분: restaurant_name과 menu_name을 함께 전송 -->
-      <form method="POST" action="{{ url_for('add_menu')}}">
-        <input type="hidden" name="restaurant_name" value="${name}"> <!-- name 파라미터를 hidden 필드로 보내기 -->
-        <input type="hidden" name="menu_name" id="hidden-menu-name"> <!-- 메뉴 이름을 hidden 필드로 보내기 -->
+    <form method="POST" action="{{ url_for('add_menu') }}" id="menuForm">
+      <input type="hidden" name="restaurant_name" value="${name}">
+      <input type="hidden" name="menu_name" id="hidden-menu-name">
 
-        <div class="flex space-x-8 mt-auto mb-3 justify-center text-sm text-white">
-          <button type="submit" class="border rounded-lg border-blue-500 bg-blue-500 p-2" onclick="submitForm()">확인</button>
-          <div class="border rounded-lg border-red-500 bg-red-500 p-2" onclick="reloadPage()">취소</div>
-        </div>
-      </form>
+      <div class="flex space-x-8 mt-auto mb-3 justify-center text-sm text-white">
+        <button type="submit" class="border rounded-lg border-blue-500 bg-blue-500 p-2" onclick="submitForm(event)">확인</button>
+        <div class="border rounded-lg border-red-500 bg-red-500 p-2" onclick="reloadPage()">취소</div>
+      </div>
+    </form>
     </div>
   `;
 
@@ -76,12 +76,17 @@
 
 
     }
-    function submitForm() {
-      const menuName = document.getElementById("menu_name").value; // 사용자가 입력한 메뉴 이름 가져오기
-      document.getElementById("hidden-menu-name").value = menuName; // hidden 필드에 설정
-
-      document.getElementById("menuForm").submit(); // 폼 제출
-    }
+      function submitForm(event) {
+        const menuName = document.getElementById("menu_name").value; // 사용자가 입력한 메뉴 이름 가져오기
+        if (!menuName) {
+          alert("메뉴 이름을 입력해주세요.");
+          event.preventDefault(); // 폼 제출을 막음
+          return;
+        }
+        document.getElementById("hidden-menu-name").value = menuName; // hidden 필드에 설정
+        console.log(menuName);
+        document.getElementById("menuForm").submit(); // 폼 제출
+      }
     function reloadPage() {
       location.reload();
     }
@@ -224,26 +229,15 @@
           </div>
         </div>
       </div>
-      <!-- 수정된 부분: restaurant_name과 menu_name을 함께 전송 -->
-      <form method="POST" action="{{ url_for('add_menu')}}">
-        <input type="hidden" name="restaurant_name" value="${name}"> <!-- name 파라미터를 hidden 필드로 보내기 -->
-        <input type="hidden" name="menu_name" id="hidden-menu-name"> <!-- 메뉴 이름을 hidden 필드로 보내기 -->
 
-        <div class="flex space-x-8 mt-auto mb-3 justify-center text-sm text-white">
-          <button type="submit" class="border rounded-lg border-blue-500 bg-blue-500 p-2"
-            onclick="submitForm()">확인</button>
-          <div class="border rounded-lg border-red-500 bg-red-500 p-2" onclick="reloadPage()">취소</div>
-        </div>
-      </form>
-
-      <!-- <div class="flex space-x-8 mt-auto mb-3 justify-center text-sm text-white">
+      <div class="flex space-x-8 mt-auto mb-3 justify-center text-sm text-white">
           <button id="confirm" class="border rounded-lg border-blue-500 bg-blue-500 px-4 py-2">
             확인
           </button>
           <button id="close-modal" class="border rounded-lg border-red-500 bg-red-500 px-4 py-2">
             취소
           </button>
-        </div> -->
+        </div>
     </div>
   </div>
   </div>
@@ -251,39 +245,46 @@
 
 <script>
   // 메뉴 추천 모드
-  function showMenuCard(id, name) {
-    let card = document.getElementById(`card-${id}`,);
+function showMenuCard(id, name) {
+    let card = document.getElementById(`card-${id}`);
     card.innerHTML = `
-                <div id="card-menu" class="w-96 h-48 flex flex-col border border-gray-200 shadow-lg rounded-lg overflow-hidden">
-                    <div class="h-40 flex flex-col justify-center space-y-2 items-center">
-                        <div class="flex flex-col">
-                            <input type="text" id="menu-input" class="block w-full py-1.5 px-3 text-base text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md" placeholder="추천 메뉴 입력">
-                            <div class="text-xs text-red-500 mt-1">추천 메뉴를 입력하세요</div>
-                        </div>
-                    </div>
-                    // <div class="flex space-x-8 mt-auto mb-3 justify-center text-sm text-white">
-                    //     <button class="border rounded-lg border-blue-500 bg-blue-500 px-4 py-2" onclick="reloadPage()">확인</button>
-                    //     <button class="border rounded-lg border-red-500 bg-red-500 px-4 py-2" onclick="reloadPage()">취소</button>
-                    // </div>
-                      <!-- 수정된 부분: restaurant_name과 menu_name을 함께 전송 -->
-      <form method="POST" action="{{ url_for('add_menu')}}">
-        <input type="hidden" name="restaurant_name" value="${name}"> <!-- name 파라미터를 hidden 필드로 보내기 -->
-        <input type="hidden" name="menu_name" id="hidden-menu-name"> <!-- 메뉴 이름을 hidden 필드로 보내기 -->
-
-        <div class="flex space-x-8 mt-auto mb-3 justify-center text-sm text-white">
-          <button type="submit" class="border rounded-lg border-blue-500 bg-blue-500 p-2" onclick="submitForm()">확인</button>
-          <div class="border rounded-lg border-red-500 bg-red-500 p-2" onclick="reloadPage()">취소</div>
-        </div>
-      </form>
-
+        <div id="card-menu" class="w-96 h-48 flex flex-col border border-gray-200 shadow-lg rounded-lg overflow-hidden">
+            <div class="h-40 flex flex-col justify-center space-y-2 items-center">
+                <div class="flex flex-col">
+                    <input type="text" id="menu-input" class="block w-full py-1.5 px-3 text-base text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md" placeholder="추천 메뉴 입력">
+                    <div class="text-xs text-red-500 mt-1">추천 메뉴를 입력하세요</div>
                 </div>
-            `;
+            </div>
+            <!-- 수정된 부분: restaurant_name과 menu_name을 함께 전송 -->
+            <form method="POST" action="{{ url_for('add_menu') }}">
+                <input type="hidden" name="restaurant_name" value="${name}"> <!-- name 파라미터를 hidden 필드로 보내기 -->
+                <input type="hidden" name="menu_name" id="hidden-menu-name"> <!-- 메뉴 이름을 hidden 필드로 보내기 -->
+
+                <div class="flex space-x-8 mt-auto mb-3 justify-center text-sm text-white">
+                    <button type="submit" class="border rounded-lg border-blue-500 bg-blue-500 p-2" onclick="submitForm(event)">확인</button>
+                    <div class="border rounded-lg border-red-500 bg-red-500 p-2" onclick="reloadPage()">취소</div>
+                </div>
+            </form>
+        </div>
+    `;
     $(`#card-${id}`).append(temp_html);
-  }
-  function submitForm() {
-    const menuName = document.getElementById("hidden-menu-name").value; // 사용자가 입력한 메뉴 이름 가져오기
+}
+
+//  function submitForm() {
+//     const menuName = document.getElementById("hidden-menu-name").value; // 사용자가 입력한 메뉴 이름 가져오기
+//     document.getElementById("hidden-menu-name").value = menuName; // hidden 필드에 설정
+//   }
+
+function submitForm(event) {
+    const menuName = document.getElementById("menu-input").value; // 사용자가 입력한 메뉴 이름 가져오기
+    if (!menuName) {
+        alert("메뉴 이름을 입력해 주세요.");
+        event.preventDefault(); // 메뉴 이름이 비었으면 폼 제출을 막음
+        return;
+    }
     document.getElementById("hidden-menu-name").value = menuName; // hidden 필드에 설정
-  }
+}
+
   // 새로고침
   function reloadPage() {
     location.reload();
