@@ -54,4 +54,4 @@
 - **Backend:** Flask, Jinja2
 - **Frontend:** TailWindCSS, JS
 - **Database:** MongoDB
-- **Scraping:** Selenium
+- **Scraping:** Selenium + Naver Maps API

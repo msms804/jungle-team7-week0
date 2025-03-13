@@ -16,9 +16,11 @@
     crossorigin="anonymous"></script>
 
   <script>
-
+    // DOM 변화 감지
     document.addEventListener("DOMContentLoaded", () => {
+      //  모달의 열기/닫기 버튼 이벤트 핸들링
       const modal = document.getElementById("modal");
+      //  우측 하단 플로팅 버튼 클릭시 모달 열림
       const openModalBtn = document.getElementById("open-modal");
       const closeModalBtn = document.getElementById("close-modal");
 
@@ -40,7 +42,8 @@
       });
     });
 
-
+    //  추천 메뉴 추가 기능
+    //  함수 실행시 #card-{id} 내부에 추천 메뉴 입력 UI 추가
     function showMenuCard(id, name) {
       // $(`#card-${id}`).empty();
       let card = document.getElementById(`card-${id}`);
@@ -77,6 +80,9 @@
       $(`#card-${id}`).append(temp_html);
 
     }
+
+    //  추천 메뉴 입력 값 확인, 입력 없는 경우 알림 출력
+    //  입력값 존재시 hidden-menu-name 필드에 값 설정 후 폼 제출
     function submitForm(event) {
       const menuName = document.getElementById("menu_name").value; // 사용자가 입력한 메뉴 이름 가져오기
       if (!menuName) {
@@ -97,7 +103,7 @@
       categoryList.classList.toggle("hidden");
     }
 
-    // 카테고리 선택
+    // 선택한 카테고리 UI 반영, hidden 필드 값 설정
     function selectCategory(category) {
       // 카테고리를 버튼에 표시
       document.getElementById('menu-button').innerText = category;
@@ -109,10 +115,12 @@
       toggleCategoryList();
     }
 
+    // 네이버 지도 링크 열기
     function openDirections(mapUrl) {
       window.open(mapUrl, '_blank');  // '_blank'로 새 창에서 열기
     }
 
+    //  무한 스크롤 통한 식당 목록 추가
     window.addEventListener('DOMContentLoaded', function () {
       // selectedCategory의 값 가져오기
       const selectedCategory = document.getElementById('selectedCategory').textContent.trim();
@@ -129,7 +137,8 @@
     });
 
     let page = 1;
-    let offset = 6;
+    let offset = 6; 
+    //  가져올 카드의 개수
     let limit = 6;
     let loading = false;
 
@@ -230,6 +239,7 @@
       }
     });
 
+    //  Spinner 실행 함수
     function showLoading() {
     document.getElementById("loading-spinner").classList.remove("hidden");
 
