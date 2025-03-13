@@ -26,7 +26,8 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 # MongoDB 연결 (예: 로컬 또는 Atlas)
 ##################################################
 # 여기서는 로컬 MongoDB를 예시로 사용
-client = pymongo.MongoClient("mongodb://localhost:27017/")
+# client = pymongo.MongoClient("mongodb://localhost:27017/")
+client = pymongo.MongoClient("mongodb://test:test@54.180.26.71",27017)
 db = client["sundaydb"]          # 데이터베이스 이름
 users_collection = db["users"]      # 유저 정보를 저장할 컬렉션
 restaurants_collection = db["restaurants"]  # 식당 정보 저장할 컬렉션
@@ -193,9 +194,9 @@ def main():
     categories = ["전체", "치킨", "한식", "카페/디저트", "중식", "버거/샌드위치", "분식", "회/초밥", "일식/돈가스", "기타"]
     query = {} if category == "전체" else {"category": category}
 
-    # restaurants = list(restaurants_collection.find(query).skip((page - 1) * per_card).limit(per_card).sort("likes", -1))
+    restaurants = list(restaurants_collection.find(query,{"_id": 0}).sort([("likes", -1), ("restaurant_id", 1)]).skip((page - 1) * per_card).limit(per_card))
 
-    restaurants = list(restaurants_collection.find(query, {"_id": 0}).limit(6))  # ObjectId 제거
+    # restaurants = list(restaurants_collection.find(query, {"_id": 0}).limit(6))  # ObjectId 제거
 
     return render_template("main.html", restaurants=restaurants, selected_category=category, categories=categories)
 ##################################################
@@ -217,10 +218,10 @@ def get_restaurants():
         offset = int(request.args.get('offset'))
         limit = int(request.args.get('limit'))
 
-        restaurants = list(restaurants_collection.find(query, {"_id": 0}).skip(offset).limit(limit))
+        restaurants = list(restaurants_collection.find(query, {"_id": 0}) .sort([("likes", -1), ("restaurant_id", 1)]).skip(offset).limit(limit))
         for restaurant in restaurants:
             restaurant["restaurant_id"] = str(restaurant["restaurant_id"])  # 변환 처리
-        print(restaurants)
+
         return jsonify({"restaurants": restaurants})  # JSON 응답
 
         # print("식당", len(restaurants))
@@ -301,7 +302,13 @@ def add_menu():
 @app.route('/register', methods=['POST'])
 def get_naver_url():
     naver_url = request.form.get('naver_url')
-    
+    if not naver_url:
+        return """
+        <script>
+          alert("링크를 입력해주세요");
+          window.location.href = "/list"  
+        </script>
+        """
     # 중복된 url 등록시
     existing_restaurant = restaurants_collection.find_one({"naver_url": naver_url})
 
@@ -315,6 +322,15 @@ def get_naver_url():
             """
 
     category = request.form.get('category') # 사용자 지정 카테고리
+
+
+    if not category:
+        return """
+        <script>
+          alert("카테고리를 선택해주세요");
+          window.location.href = "/list"  
+        </script>
+        """
 
     print(f"Received category: {category}")
     print(f"Received naver_url: {naver_url}")
@@ -388,15 +404,22 @@ def create_directions_url(start_lat, start_lon, start_name, shop_name, address):
 
 # WebDriver 인스턴스 생성 함수
 def initialize_driver():
-    # 새로운 WebDriver 세션 시작
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")  # 창을 띄우지 않음
-    chrome_options.add_argument("--disable-gpu")  # GPU 가속 비활성화
-    chrome_options.add_argument("--no-sandbox")  # 보안 샌드박스 비활성화
-    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless=new")  # GUI 없는 환경에서 실행
+    options.add_argument("--no-sandbox")  # 샌드박스 비활성화 (EC2 필수)
+    options.add_argument("--disable-dev-shm-usage")  # 공유 메모리 사용 안 함
+    options.add_argument("--disable-gpu")  # GPU 비활성화
+    options.add_argument("--window-size=1920x1080")  # 가상 디스플레이 크기 설정
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+    options.page_load_strategy = "eager"  # 페이지 로딩 속도 개선
+    options.add_argument("--remote-debugging-port=9222")  # 디버깅 포트 추가
 
-    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
+    service = ChromeService("/usr/local/bin/chromedriver")
+    driver = webdriver.Chrome(service=service, options=options)
+    driver.set_page_load_timeout(30)  # 페이지 로딩 타임아웃을 30초로 설정
+
     return driver
+
 
 #  실제 parsing 함수
 def parse_url(url, category):
@@ -405,11 +428,11 @@ def parse_url(url, category):
     start_time = time.time()  # 크롤링 시작 시간 기록
     
     driver.get(url)
-    time.sleep(1)
+    # time.sleep(1)
 
     # iframe 요소 찾기
     try:
-        iframe = WebDriverWait(driver, 10).until(
+        iframe = WebDriverWait(driver, 5).until(
             EC.presence_of_element_located((By.ID, "entryIframe"))  # iframe ID로 찾기
         )
         driver.switch_to.frame(iframe)  # iframe으로 전환
@@ -419,7 +442,7 @@ def parse_url(url, category):
 
     ## 가게이름
     try:
-        shop_name = WebDriverWait(driver, 10).until(
+        shop_name = WebDriverWait(driver, 5).until(
             EC.presence_of_element_located((By.CLASS_NAME, "GHAhO"))
         )
         print("가게 이름:", shop_name.text)  # 가게 이름 출력
@@ -428,7 +451,7 @@ def parse_url(url, category):
         
     ## 주소
     try:
-        address = WebDriverWait(driver, 10).until(
+        address = WebDriverWait(driver, 5).until(
             EC.presence_of_element_located((By.CLASS_NAME, "LDgIH"))
         )
         print("주소 : ", address.text)
@@ -438,7 +461,7 @@ def parse_url(url, category):
 
     ## 해시태그
     try:
-        hashtag = WebDriverWait(driver, 10).until(
+        hashtag = WebDriverWait(driver, 5).until(
             EC.presence_of_element_located((By.CLASS_NAME, "lnJFt"))
         )
         print("해시태그 : ", hashtag.text)
@@ -448,7 +471,7 @@ def parse_url(url, category):
     # 이미지 url
     try:
         # 'fNygA' 클래스의 div 요소 찾기
-        div_element = WebDriverWait(driver, 10).until(
+        div_element = WebDriverWait(driver, 5).until(
             EC.presence_of_element_located((By.CLASS_NAME, "fNygA"))
         )
         
@@ -473,7 +496,7 @@ def parse_url(url, category):
         "category": category,  # 카테고리는 수집된 카테고리 값으로 설정
         "naver_url": url,  # 입력된 네이버 URL
         "likes": 0,  # 좋아요 수는 크롤링 시점에서 수집할 수 없다면 0으로 기본값 설정
-        "description": "설명 없음",  # 설명도 크롤링하거나 입력된 값으로 설정
+        "description": hashtag.text,  # 설명도 크롤링하거나 입력된 값으로 설정
         "image_url": img_src,  # 크롤링된 이미지 URL
         "map_url" : map_url, # 길찾기 링크
         "menus": []  # 메뉴 정보는 수집되지 않으므로 기본 빈 리스트
@@ -506,6 +529,6 @@ def parse_url(url, category):
 # Flask 실행
 ##################################################
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    app.run(host="0.0.0.0", port=5000 , debug=True )
 
                                                                                                                                                                                                                                                                                                                                                                    

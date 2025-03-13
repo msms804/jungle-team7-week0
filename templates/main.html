@@ -40,40 +40,41 @@
       });
     });
 
+
     function showMenuCard(id, name) {
-      $(`#card-${id}`).empty();
-      let temp_html = `
-    <div id="card-menu" class="w-96 h-48 flex flex-col border-1 border-gray-200 shadow-lg rounded-lg overflow-hidden">
-      <div class="h-40 flex flex-col justify-center space-y-2 items-center">
-        <div class="flex flex-col">
-          <div>
-            <div class="mt-2">
-              <div class="flex items-center rounded-md bg-white pl-3 outline-1 -outline-offset-1 outline-gray-300 has-[input:focus-within]:outline-2 has-[input:focus-within]:-outline-offset-2 has-[input:focus-within]:outline-indigo-600">
-                <input type="text" name="menu_name" id="menu_name"
-                  class="border block min-w-0 grow py-1.5 pr-3 pl-1 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none sm:text-sm/6"
-                  placeholder="메뉴 이름을 입력하세요">
+      // $(`#card-${id}`).empty();
+      let card = document.getElementById(`card-${id}`);
+
+      card.innerHTML = `
+      <div id="card-menu" class="w-96 h-48 flex flex-col border-1 border-gray-200 shadow-lg rounded-lg overflow-hidden">
+        <div class="h-40 flex flex-col justify-center space-y-2 items-center">
+          <div class="flex flex-col">
+            <div>
+              <div class="mt-2">
+                <div class="flex items-center rounded-md bg-white pl-3 outline-1 -outline-offset-1 outline-gray-300 has-[input:focus-within]:outline-2 has-[input:focus-within]:-outline-offset-2 has-[input:focus-within]:outline-indigo-600">
+                  <input type="text" name="menu_name" id="menu_name"
+                    class="border block min-w-0 grow py-1.5 pr-3 pl-1 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none sm:text-sm/6"
+                    placeholder="메뉴 이름을 입력하세요">
+                </div>
               </div>
             </div>
+            <div class="text-xs text-red-500">추천 메뉴 이름을 입력해 주세요</div>
           </div>
-          <div class="text-xs text-red-500">추천 메뉴 이름을 입력해 주세요</div>
         </div>
-      </div>
 
-      <!-- 수정된 부분: restaurant_name과 menu_name을 함께 전송 -->
-    <form method="POST" action="{{ url_for('add_menu') }}" id="menuForm">
-      <input type="hidden" name="restaurant_name" value="${name}">
-      <input type="hidden" name="menu_name" id="hidden-menu-name">
+          <!-- 수정된 부분: restaurant_name과 menu_name을 함께 전송 -->
+        <form method="POST" action="{{ url_for('add_menu') }}" id="menuForm">
+          <input type="hidden" name="restaurant_name" value="${name}">
+          <input type="hidden" name="menu_name" id="hidden-menu-name">
 
-      <div class="flex space-x-8 mt-auto mb-3 justify-center text-sm text-white">
-        <button type="submit" class="border rounded-lg border-blue-500 bg-blue-500 p-2" onclick="submitForm(event)">확인</button>
-        <div class="border rounded-lg border-red-500 bg-red-500 p-2" onclick="reloadPage()">취소</div>
-      </div>
-    </form>
-    </div>
-  `;
+          <div class="flex space-x-8 mt-auto mb-3 justify-center text-sm text-white">
+            <button type="submit" class="border rounded-lg border-blue-500 bg-blue-500 p-2" onclick="submitForm(event)">확인</button>
+            <div class="border rounded-lg border-red-500 bg-red-500 p-2" onclick="reloadPage()">취소</div>
+          </div>
+        </form>
+      </div>`;
 
       $(`#card-${id}`).append(temp_html);
-
 
     }
     function submitForm(event) {
@@ -143,6 +144,8 @@
 
             // 로딩 중 메시지 처리
             //console.log('로딩 중... 요소가 화면에 나타났습니다.');
+            console.log(offset)
+            console.log(limit)
 
             // 서버에서 데이터 로드
             fetch(`/list/infinite?offset=${offset}&limit=${limit}`)
@@ -187,18 +190,18 @@
                             </div>
 
                         </div>
-                        <div class="flex flex-row space-x-8 mt-auto justify-center text-sm text-white">
-                          <form method="POST"  action="/like/${restaurant.restaurant_id}">
-                            <button type="submit" class="border rounded-lg border-blue-500 bg-blue-500 p-1">
+                        <div class="flex flex-row space-x-4 mt-auto justify-center text-sm text-white mb-2 w-full">
+                          <form method="POST"  action="/like/${restaurant.restaurant_id}" class="flex w-full space-x-2">
+                            <button type="submit" class="border rounded-lg border-[#0C1D1D] bg-[#0C1D1D] flex-1 text-center">
                               ❤️  <span>${restaurant.likes}</span>
                             </button>
-                            <button class="border rounded-lg border-green-500 bg-green-500 p-1"
+                            <button class="border rounded-lg border-[#0C1D1D] bg-[#0C1D1D] flex-1 text-center"
                               onclick="openDirections('${restaurant.map_url}')">
-                              네이버 길찾기
+                              📍 길찾기
                             </button>
-                             <button class="border rounded-lg border-red-500 bg-red-500 p-1"
-                          onclick="showMenuCard('${restaurant.naver_url}', '${restaurant.name}')">
-                              메뉴 추천
+                            <button type="button" class="border rounded-lg border-[#0C1D1D] bg-[#0C1D1D] flex-1 text-center"
+                            onclick="showMenuCard('${restaurant.naver_url}', '${restaurant.name}')">
+                              🗒 메뉴추천
                             </button>
                           </form>
                         </div>
@@ -226,6 +229,17 @@
         observer.observe(loadingElement);
       }
     });
+
+    function showLoading() {
+    document.getElementById("loading-spinner").classList.remove("hidden");
+
+    document.getElementById("naver-link").style.minHeight = "280px";
+
+    document.getElementById("confirm").disabled = true;
+    document.getElementById("confirm").innerText = "등록 중...";
+
+    return true;
+  }
   </script>
 </head>
 
@@ -295,7 +309,7 @@
           <div class="h-40 space-y-2">
             <h3 class="text-lg font-bold">{{ restaurant.name }}</h3>
             <p class="text-sm">{{ restaurant.address }}</p>
-            <p class="text-gray-500 text-sm"># {{ restaurant.category }}</p>
+            <p class="text-gray-500 text-sm"># {{ restaurant.description }}</p>
             <div class="flex space-x-2 text-xs text-gray-500">
               <div class="flex space-x-2">
                 {% if restaurant.menus %}
@@ -308,21 +322,21 @@
               </div>
             </div>
           </div>
-          <div class="flex flex-row space-x-8 mt-auto justify-center text-sm text-white">
-            <form method="POST" action="{{ url_for('like_restaurant', restaurant_id=restaurant.restaurant_id) }}">
-              <button type="submit" class="border rounded-lg border-blue-500 bg-blue-500 p-1">
-                ❤️ <span>{{ restaurant.likes }}</span>
-              </button>
-              <button class="border rounded-lg border-green-500 bg-green-500 p-1"
-                onclick="openDirections('{{ restaurant.map_url }}')">
-                네이버 길찾기
-              </button>
-              <button class="border rounded-lg border-red-500 bg-red-500 p-1"
-                onclick="showMenuCard('{{ loop.index }}', '{{ restaurant.name }}')">
-                메뉴 추천
-              </button>
-            </form>
-          </div>
+          <div class="flex flex-row space-x-4 mt-auto justify-center text-sm text-white mb-2 w-full">
+          <form method="POST" action="{{ url_for('like_restaurant', restaurant_id=restaurant.restaurant_id) }}" class="flex w-full space-x-2">
+            <button type="submit" class="border rounded-lg border-[#0C1D1D] bg-[#0C1D1D] flex-1 text-center">
+              ❤️ <span>{{ restaurant.likes }}</span>
+            </button>
+            <button type="button" class="border rounded-lg border-[#0C1D1D] bg-[#0C1D1D] flex-1 text-center"
+              onclick="openDirections('{{ restaurant.map_url }}')">
+              📍 길찾기
+            </button>
+            <button type="button" class="border rounded-lg border-[#0C1D1D] bg-[#0C1D1D] flex-1 text-center"
+              onclick="showMenuCard('{{ loop.index }}', '{{ restaurant.name }}')">
+              🗒 메뉴추천
+            </button>
+          </form>
+        </div>
         </div>
       </div>
       {% endfor %}
@@ -341,11 +355,11 @@
 
   <!-- 플로팅 버튼 클릭 시 나타나는 모달 -->
   <div id="modal" class="fixed inset-0 bg-black/30 flex justify-center items-center hidden">
-    <div id="naver-link" class="w-96 h-48 flex flex-col border border-gray-200 shadow-lg rounded-lg bg-white p-4">
+    <div id="naver-link" class="w-96 h-60 flex flex-col border border-gray-200 shadow-lg rounded-lg bg-white p-4">
       <div class="h-40 flex flex-col justify-center space-y-2 items-center">
         <div class="relative inline-block text-left">
           <button type="button"
-            class="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50"
+            class="inline-flex w-48 justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50"
             id="menu-button" onclick="toggleCategoryList()">
             카테고리를 선택해주세요
           </button>
@@ -353,7 +367,7 @@
           <div id="category-list"
             class="absolute w-full mt-2 bg-white shadow-lg rounded-md max-h-40 overflow-y-auto hidden">
             <ul class="py-1 text-sm text-gray-700">
-              {% for category_item in categories %}
+              {% for category_item in categories[1:] %}
               <li>
                 <button
                   class="block w-full text-left px-4 py-2 
@@ -367,20 +381,25 @@
           </div>
         </div>
       </div>
-      <form method="POST" action="{{ url_for('get_naver_url') }}">
+      <!--  로딩 중 표시될 Spinner -->
+      <div id="loading-spinner" class="hidden flex justify-center items-center mt-4 mb-4">
+        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+        <p class="ml-2 text-sm text-blue-500">등록 중...</p>
+      </div>
+      <form method="POST" action="{{ url_for('get_naver_url') }}" onsubmit="showLoading()">
         <input type="hidden" name="category" id="selected-category"> <!-- 카테고리 hidden 필드 -->
 
         <div class="flex flex-col">
           <input type="text" name="naver_url" id="price"
             class="block w-full py-1.5 px-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none border border-gray-300 rounded-md"
             placeholder="네이버 지도 링크 입력" />
-          <div class="text-xs text-red-500 mt-1">
+          <div class="text-xs text-red-500 mt-2 mb-2">
             네이버지도 > 공유 탭에 들어가서 링크를 복사 후 붙여넣기
           </div>
         </div>
         <div class="flex space-x-8 mt-auto mb-3 justify-center text-sm text-white">
           <button id="confirm" class="border rounded-lg border-blue-500 bg-blue-500 px-4 py-2">
-            확인
+            식당 등록
           </button>
           <button id="close-modal" type="button" class="border rounded-lg border-red-500 bg-red-500 px-4 py-2">
             취소
